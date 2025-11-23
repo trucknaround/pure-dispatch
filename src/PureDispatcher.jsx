@@ -77,7 +77,8 @@ const getSkillIcon = (skillName) => {
     callBroker: Phone,
     getWeatherRoute: CloudRain,
     checkWeighStation: AlertCircle,
-    logIncident: AlertCircle
+    logIncident: AlertCircle,
+    draftEmail: Mail
   };
   return icons[skillName] || MapPin;
 };
@@ -677,6 +678,76 @@ export default function PureDispatcher() {
 
   const handleSend = async () => { await handleSendWithText(inputText); };
 
+  const handleSendEmail = async (emailData) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/email/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: emailData.recipient.includes('@') ? emailData.recipient : 'broker@example.com',
+          subject: emailData.subject,
+          body: emailData.body,
+          from: carrier?.email || 'driver@puredispatch.com'
+        })
+      });
+
+      if (response.ok) {
+        const confirmMessage = {
+          from: 'pure',
+          text: `✅ Email sent successfully to ${emailData.recipient}! They should receive it shortly.`,
+          timestamp: new Date(),
+          mood: 'positive',
+          skill: null
+        };
+        setMessages(prev => [...prev, confirmMessage]);
+        
+        if (audioEnabled) {
+          forceSpeak(confirmMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        }
+      } else {
+        throw new Error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('Send email error:', error);
+      const errorMessage = {
+        from: 'pure',
+        text: "I had trouble sending that email. Can you try again or send it manually?",
+        timestamp: new Date(),
+        mood: 'neutral',
+        skill: null
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const handleEditEmail = (emailData) => {
+    const editMessage = {
+      from: 'pure',
+      text: "What changes would you like me to make to the email?",
+      timestamp: new Date(),
+      mood: 'neutral',
+      skill: null
+    };
+    setMessages(prev => [...prev, editMessage]);
+    if (audioEnabled) {
+      forceSpeak(editMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+    }
+  };
+
+  const handleCancelEmail = () => {
+    const cancelMessage = {
+      from: 'pure',
+      text: "No problem, I've canceled that email. What else can I help with?",
+      timestamp: new Date(),
+      mood: 'neutral',
+      skill: null
+    };
+    setMessages(prev => [...prev, cancelMessage]);
+    if (audioEnabled) {
+      forceSpeak(cancelMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -955,6 +1026,50 @@ export default function PureDispatcher() {
                               </div>
                             )}
                             <p className="text-base leading-relaxed whitespace-pre-wrap font-normal">{msg.text}</p>
+                            {msg.meta?.skill === 'draftEmail' && msg.meta?.action === 'draft' && (
+                              <div className="mt-4 bg-gray-800 border border-gray-700 rounded-xl p-4">
+                                <div className="text-sm text-gray-400 mb-3 flex items-center gap-2">
+                                  <Mail className="w-4 h-4" />
+                                  <span>Draft Email</span>
+                                </div>
+                                
+                                <div className="space-y-2 mb-4">
+                                  <div>
+                                    <span className="text-gray-500 text-xs uppercase">To:</span>
+                                    <div className="text-white text-sm mt-1">{msg.meta.email.recipient}</div>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500 text-xs uppercase">Subject:</span>
+                                    <div className="text-white text-sm mt-1">{msg.meta.email.subject}</div>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500 text-xs uppercase">Message:</span>
+                                    <div className="text-white text-sm mt-1 whitespace-pre-wrap bg-gray-900 p-3 rounded-lg border border-gray-700">{msg.meta.email.body}</div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleSendEmail(msg.meta.email)}
+                                    className="flex-1 bg-green-500 text-black px-4 py-2.5 rounded-lg hover:bg-green-400 transition-colors font-medium text-sm"
+                                  >
+                                    ✓ Approve & Send
+                                  </button>
+                                  <button
+                                    onClick={() => handleEditEmail(msg.meta.email)}
+                                    className="flex-1 bg-gray-700 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                                  >
+                                    ✎ Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleCancelEmail()}
+                                    className="bg-red-900/30 text-red-400 px-4 py-2.5 rounded-lg hover:bg-red-900/50 transition-colors text-sm"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className={`flex items-center gap-1.5 mt-1.5 px-2 ${msg.from === "driver" ? "justify-end" : "justify-start"}`}>
                             <Clock className="w-3 h-3 text-gray-600" />
