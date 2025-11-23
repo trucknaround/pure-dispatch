@@ -1,5 +1,5 @@
 // api/pure/chat.js
-// Vercel Serverless Function for Pure Dispatch AI Chat
+// Vercel Serverless Function for Pure Dispatch AI Chat with Email Function Calling
 
 import OpenAI from 'openai';
 
@@ -11,6 +11,24 @@ const openai = new OpenAI({
 // Mock response generator (fallback when no API key)
 const generateMockResponse = (message) => {
   const msg = message.toLowerCase();
+  
+  // Check for email requests
+  if (msg.includes('email') || msg.includes('send') || msg.includes('draft')) {
+    return {
+      text: "I've drafted this email for you. Review it and let me know if you want to send it:",
+      mood: "positive",
+      meta: {
+        skill: "draftEmail",
+        action: "draft",
+        email: {
+          recipient: "broker@abclogistics.com",
+          subject: "Re: Load #12345 - Update",
+          body: "Hi,\n\nI wanted to reach out regarding load #12345. We're currently en route and making good progress.\n\nPlease let me know if you need any additional information.\n\nBest regards,\nDriver",
+          context: "General inquiry"
+        }
+      }
+    };
+  }
   
   if (msg.includes('fuel') || msg.includes('diesel') || msg.includes('gas')) {
     return {
@@ -69,7 +87,7 @@ const generateMockResponse = (message) => {
   }
   
   return {
-    text: "I got you, driver. What else can I help with? I can find fuel, give directions, search loads, call brokers, check weigh stations, get weather updates, or log incidents.",
+    text: "I got you, driver. What else can I help with? I can find fuel, give directions, search loads, call brokers, check weigh stations, get weather updates, draft emails, or log incidents.",
     mood: "neutral"
   };
 };
@@ -115,21 +133,78 @@ You speak like a real dispatcher: friendly, clear, experienced.
 You prioritize the driver's safety, time, and pay above all.
 You use light trucking slang and occasional humor.
 
-You handle: load search, routing, broker negotiations, compliance, and driver support.
+You have access to these tools:
+- draftEmail: Draft professional emails to brokers, shippers, or receivers
+- findFuel: Find nearby fuel stations
+- getWeather: Get route weather forecasts
+- bookLoad: Search and book loads
+- callBroker: Initiate phone calls
+- logIncident: Document incidents and delays
 
-You never say you're an AI. Always act like a dispatcher.
-
-Sign off with phrases like "I got you, driver" or "Stay safe out there."`
+When the driver asks you to email someone, use the draftEmail tool to create a professional email draft.
+Always act like a dispatcher. Sign off with phrases like "I got you, driver" or "Stay safe out there."`
             },
             {
               role: "user",
               content: message
             }
           ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "draftEmail",
+                description: "Draft a professional email to a broker, shipper, receiver, or other trucking contact about loads, delays, issues, questions, or updates",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    recipient: {
+                      type: "string",
+                      description: "Who to email - can be role (e.g., 'the broker') or specific (e.g., 'John at ABC Logistics')"
+                    },
+                    subject: {
+                      type: "string",
+                      description: "Email subject line - clear and professional"
+                    },
+                    body: {
+                      type: "string",
+                      description: "Email body content - professional, clear, and friendly. Use proper email formatting with greeting and sign-off."
+                    },
+                    context: {
+                      type: "string",
+                      description: "What this email is about (e.g., 'pickup delay', 'rate confirmation', 'load inquiry', 'ETA update')"
+                    }
+                  },
+                  required: ["recipient", "subject", "body", "context"]
+                }
+              }
+            }
+          ],
+          tool_choice: "auto",
           max_tokens: 500,
           temperature: 0.7
         });
 
+        // Check if Pure wants to use a tool
+        if (completion.choices[0].message.tool_calls) {
+          const toolCall = completion.choices[0].message.tool_calls[0];
+          
+          if (toolCall.function.name === "draftEmail") {
+            const emailData = JSON.parse(toolCall.function.arguments);
+            
+            return res.status(200).json({
+              text: `I've drafted this email for you. Take a look and let me know if you want to send it:`,
+              mood: "positive",
+              meta: {
+                skill: "draftEmail",
+                action: "draft",
+                email: emailData
+              }
+            });
+          }
+        }
+
+        // Normal text response
         const responseText = completion.choices[0].message.content;
 
         return res.status(200).json({
