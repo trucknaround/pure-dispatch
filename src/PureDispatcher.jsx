@@ -84,6 +84,403 @@ const getSkillIcon = (skillName) => {
 };
 
 // =====================================================
+// GPS & LOCATION UTILITIES
+// =====================================================
+
+// Start GPS tracking
+const startGPSTracking = (onLocation, onError) => {
+  if (!navigator.geolocation) {
+    onError('GPS not supported');
+    return null;
+  }
+
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+  };
+
+  const watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const locationData = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        speed: position.coords.speed,
+        heading: position.coords.heading,
+        altitude: position.coords.altitude,
+        timestamp: position.timestamp
+      };
+      onLocation(locationData);
+    },
+    (error) => {
+      let errorMessage = 'GPS error';
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'GPS permission denied';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'GPS position unavailable';
+          break;
+        case error.TIMEOUT:
+          errorMessage = 'GPS timeout';
+          break;
+      }
+      onError(errorMessage);
+    },
+    options
+  );
+
+  return watchId;
+};
+
+// Stop GPS tracking
+const stopGPSTracking = (watchId) => {
+  if (watchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(watchId);
+  }
+};
+
+// Calculate distance between two points (Haversine formula)
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 3959; // Earth radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+// Calculate ETA
+const calculateETA = (currentLat, currentLon, destLat, destLon, avgSpeedMph = 55) => {
+  const distance = calculateDistance(currentLat, currentLon, destLat, destLon);
+  const hoursToDestination = distance / avgSpeedMph;
+  const eta = new Date(Date.now() + hoursToDestination * 60 * 60 * 1000);
+  return {
+    distance: distance.toFixed(1),
+    hours: Math.floor(hoursToDestination),
+    minutes: Math.round((hoursToDestination % 1) * 60),
+    eta: eta,
+    etaString: eta.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  };
+};
+
+// Format location for display
+const formatLocation = (lat, lon) => {
+  return `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+};
+
+// Convert speed from m/s to mph
+const metersPerSecondToMph = (mps) => {
+  if (mps === null || mps === undefined) return null;
+  return (mps * 2.237).toFixed(1);
+};
+
+// Find nearby services using Overpass API (OpenStreetMap - FREE)
+const findNearbyServices = async (latitude, longitude, radiusMiles = 25, type = 'fuel') => {
+  try {
+    let query = '';
+    const radiusMeters = radiusMiles * 1609.34;
+    
+    switch(type) {
+      case 'fuel':
+        query = `[out:json];node[amenity=fuel](around:${radiusMeters},${latitude},${longitude});out;`;
+        break;
+      case 'rest':
+        query = `[out:json];node[highway=rest_area](around:${radiusMeters},${latitude},${longitude});out;`;
+        break;
+      case 'parking':
+        query = `[out:json];node[amenity=parking][hgv=yes](around:${radiusMeters},${latitude},${longitude});out;`;
+        break;
+      case 'food':
+        query = `[out:json];node[amenity~"restaurant|fast_food"](around:${radiusMeters},${latitude},${longitude});out;`;
+        break;
+      case 'repair':
+        query = `[out:json];node[shop=truck_repair](around:${radiusMeters},${latitude},${longitude});out;`;
+        break;
+      case 'weigh':
+        query = `[out:json];node[amenity=weigh_station](around:${radiusMeters},${latitude},${longitude});out;`;
+        break;
+      default:
+        query = `[out:json];node[amenity=fuel](around:${radiusMeters},${latitude},${longitude});out;`;
+    }
+    
+    const response = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.elements.map(element => ({
+        id: element.id,
+        name: element.tags.name || 'Unnamed',
+        lat: element.lat,
+        lon: element.lon,
+        distance: calculateDistance(latitude, longitude, element.lat, element.lon).toFixed(1),
+        brand: element.tags.brand || '',
+        operator: element.tags.operator || '',
+        type: type,
+        amenities: element.tags.amenity ? [element.tags.amenity] : []
+      })).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+    }
+  } catch (error) {
+    console.error('Service search error:', error);
+  }
+  
+  // Fallback to mock data if API fails
+  const mockServices = {
+    fuel: [
+      { name: "Pilot Travel Center", distance: "12.3", lat: latitude + 0.1, lon: longitude + 0.1, brand: "Pilot", type: "fuel" },
+      { name: "Love's Travel Stop", distance: "18.7", lat: latitude + 0.15, lon: longitude + 0.15, brand: "Love's", type: "fuel" }
+    ],
+    rest: [
+      { name: "Rest Area", distance: "8.2", lat: latitude + 0.05, lon: longitude + 0.05, type: "rest" }
+    ],
+    food: [
+      { name: "McDonald's", distance: "5.3", lat: latitude + 0.03, lon: longitude + 0.03, type: "food" }
+    ]
+  };
+  return mockServices[type] || [];
+};
+
+// Format location share for broker
+const formatLocationShare = (locationData, driverName, loadNumber) => {
+  const googleMapsLink = `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`;
+  const timestamp = new Date(locationData.timestamp).toLocaleString();
+  const speedText = locationData.speed ? `${metersPerSecondToMph(locationData.speed)} mph` : 'Stationary';
+  
+  return {
+    text: `${driverName} - Load ${loadNumber}
+Location: ${formatLocation(locationData.latitude, locationData.longitude)}
+Speed: ${speedText}
+Updated: ${timestamp}
+Map: ${googleMapsLink}`,
+    link: googleMapsLink,
+    coordinates: { lat: locationData.latitude, lon: locationData.longitude }
+  };
+};
+
+// =====================================================
+// GPS CONTROL PANEL COMPONENT
+// =====================================================
+function GPSControlPanel({ 
+  location, 
+  isTracking, 
+  onStartTracking, 
+  onStopTracking, 
+  speed,
+  currentLoad,
+  onSendETAUpdate 
+}) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  return (
+    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Navigation className={`w-5 h-5 ${isTracking ? 'text-green-400' : 'text-gray-500'}`} />
+          <span className="text-white font-medium">GPS Tracking</span>
+        </div>
+        <button
+          onClick={isTracking ? onStopTracking : onStartTracking}
+          className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+            isTracking 
+              ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50' 
+              : 'bg-green-500 text-black hover:bg-green-400'
+          }`}
+        >
+          {isTracking ? 'Stop Tracking' : 'Start Tracking'}
+        </button>
+      </div>
+
+      {isTracking && location && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="bg-gray-800 rounded-lg p-2">
+              <p className="text-gray-400 text-xs">Latitude</p>
+              <p className="text-white font-mono">{location.latitude.toFixed(6)}</p>
+            </div>
+            <div className="bg-gray-800 rounded-lg p-2">
+              <p className="text-gray-400 text-xs">Longitude</p>
+              <p className="text-white font-mono">{location.longitude.toFixed(6)}</p>
+            </div>
+          </div>
+
+          {speed !== null && speed > 0 && (
+            <div className="bg-gray-800 rounded-lg p-2">
+              <p className="text-gray-400 text-xs">Current Speed</p>
+              <p className="text-green-400 text-lg font-medium">{speed} mph</p>
+            </div>
+          )}
+
+          {currentLoad && (
+            <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-300">Active Load</span>
+                <span className="text-xs text-green-400 flex items-center gap-1">
+                  <Zap className="w-3 h-3" />
+                  En Route
+                </span>
+              </div>
+              <p className="text-white text-sm mb-2 font-medium">{currentLoad.destination}</p>
+              <button
+                onClick={onSendETAUpdate}
+                className="w-full px-3 py-2 bg-green-500 text-black rounded-lg hover:bg-green-400 transition-colors text-sm font-medium"
+              >
+                Send ETA Update to Broker
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="w-full px-3 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+          >
+            {showDetails ? 'Hide Details' : 'Show GPS Details'}
+            <ChevronDown className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showDetails && (
+            <div className="bg-gray-800 rounded-lg p-3 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Accuracy:</span>
+                <span className="text-white">{location.accuracy.toFixed(0)}m</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Last Update:</span>
+                <span className="text-white">{new Date(location.timestamp).toLocaleTimeString()}</span>
+              </div>
+              {location.altitude !== null && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Altitude:</span>
+                  <span className="text-white">{location.altitude.toFixed(0)}m</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isTracking && (
+        <p className="text-gray-500 text-sm text-center py-2">
+          Enable GPS tracking to get real-time location, ETA updates, and nearby services
+        </p>
+      )}
+    </div>
+  );
+}
+
+// =====================================================
+// NEARBY SERVICES COMPONENT
+// =====================================================
+function NearbyServicesPanel({ location, onServiceRequest }) {
+  const [services, setServices] = useState([]);
+  const [selectedType, setSelectedType] = useState('fuel');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const serviceTypes = [
+    { id: 'fuel', name: 'Fuel', icon: Fuel },
+    { id: 'rest', name: 'Rest', icon: Home },
+    { id: 'parking', name: 'Park', icon: Truck },
+    { id: 'food', name: 'Food', icon: Package },
+    { id: 'repair', name: 'Repair', icon: AlertCircle },
+    { id: 'weigh', name: 'Weigh', icon: Package }
+  ];
+
+  const searchServices = async (type) => {
+    if (!location) return;
+    
+    setIsLoading(true);
+    const results = await findNearbyServices(location.latitude, location.longitude, 25, type);
+    setServices(results);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    if (location && selectedType) {
+      searchServices(selectedType);
+    }
+  }, [location, selectedType]);
+
+  return (
+    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+      <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+        <MapPin className="w-5 h-5 text-green-400" />
+        Nearby Services
+      </h3>
+
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        {serviceTypes.map((type) => {
+          const Icon = type.icon;
+          return (
+            <button
+              key={type.id}
+              onClick={() => setSelectedType(type.id)}
+              className={`p-2 rounded-lg border-2 transition-all ${
+                selectedType === type.id
+                  ? 'border-green-500 bg-green-500/10 text-green-400'
+                  : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
+              }`}
+            >
+              <Icon className="w-4 h-4 mx-auto mb-1" />
+              <p className="text-xs">{type.name}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {!location && (
+        <p className="text-gray-500 text-sm text-center py-3">
+          Enable GPS tracking to see nearby services
+        </p>
+      )}
+
+      {isLoading && (
+        <div className="text-center py-4">
+          <RefreshCw className="w-6 h-6 text-green-400 animate-spin mx-auto" />
+          <p className="text-gray-400 text-xs mt-2">Searching nearby...</p>
+        </div>
+      )}
+
+      {!isLoading && services.length > 0 && (
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          {services.slice(0, 10).map((service) => (
+            <div
+              key={service.id}
+              className="bg-gray-800 rounded-lg p-3 hover:bg-gray-750 transition-colors cursor-pointer"
+              onClick={() => onServiceRequest && onServiceRequest(service)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-white text-sm font-medium">{service.name}</p>
+                  {service.brand && (
+                    <p className="text-gray-400 text-xs">{service.brand}</p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <p className="text-green-400 text-sm font-medium">{service.distance} mi</p>
+                  <p className="text-gray-500 text-xs">away</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && services.length === 0 && location && (
+        <p className="text-gray-500 text-sm text-center py-3">
+          No {serviceTypes.find(t => t.id === selectedType)?.name.toLowerCase()} found within 25 miles
+        </p>
+      )}
+    </div>
+  );
+}
+
+// =====================================================
 // LOGIN PAGE COMPONENT (Enhanced with Forgot Password)
 // =====================================================
 function LoginPage({ onLogin }) {
@@ -1146,6 +1543,15 @@ export default function PureDispatcher() {
   const [podFiles, setPodFiles] = useState([]);
   const [isSubmittingPOD, setIsSubmittingPOD] = useState(false);
 
+  // GPS & Location state
+  const [location, setLocation] = useState(null);
+  const [isTrackingLocation, setIsTrackingLocation] = useState(false);
+  const [locationError, setLocationError] = useState(null);
+  const [gpsSpeed, setGpsSpeed] = useState(null);
+  const [nearbyServices, setNearbyServices] = useState([]);
+  const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
+  const gpsWatchIdRef = useRef(null);
+
   const messagesEndRef = useRef(null);
   const profileMenuRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -1247,6 +1653,41 @@ export default function PureDispatcher() {
       return () => clearTimeout(timer);
     }
   }, [isRegistered, showDashboard, currentView, messages.length, audioEnabled]);
+
+  // GPS Tracking
+  useEffect(() => {
+    if (isTrackingLocation && isRegistered) {
+      const watchId = startGPSTracking(
+        (locationData) => {
+          setLocation(locationData);
+          setLocationError(null);
+          // Save location to localStorage for history
+          localStorage.setItem('pureLastLocation', JSON.stringify(locationData));
+        },
+        (error) => {
+          setLocationError(error);
+          setIsTrackingLocation(false);
+        }
+      );
+      gpsWatchIdRef.current = watchId;
+
+      return () => {
+        if (gpsWatchIdRef.current !== null) {
+          stopGPSTracking(gpsWatchIdRef.current);
+          gpsWatchIdRef.current = null;
+        }
+      };
+    }
+  }, [isTrackingLocation, isRegistered]);
+
+  // Toggle GPS tracking
+  const toggleGPSTracking = () => {
+    if (isTrackingLocation) {
+      handleStopGPSTracking();
+    } else {
+      handleStartGPSTracking();
+    }
+  };
 
   // Generate mock loads
   const generateMockLoads = () => {
@@ -1401,6 +1842,153 @@ export default function PureDispatcher() {
     }
   };
 
+  // =====================================================
+  // GPS TRACKING HANDLERS
+  // =====================================================
+
+  const handleStartGPSTracking = () => {
+    const watchId = startGPSTracking(
+      (locationData) => {
+        setLocation(locationData);
+        setLocationError(null);
+        
+        // Update speed
+        if (locationData.speed !== null) {
+          const speedMph = metersPerSecondToMph(locationData.speed);
+          setGpsSpeed(speedMph);
+        }
+      },
+      (error) => {
+        setLocationError(error);
+        setIsTrackingLocation(false);
+      }
+    );
+    
+    if (watchId !== null) {
+      gpsWatchIdRef.current = watchId;
+      setIsTrackingLocation(true);
+      
+      // Voice confirmation
+      const confirmMsg = "GPS tracking enabled! I'll help you navigate and keep the broker updated on your ETA.";
+      forceSpeak(confirmMsg, () => setIsSpeaking(true), () => setIsSpeaking(false));
+    }
+  };
+
+  const handleStopGPSTracking = () => {
+    if (gpsWatchIdRef.current !== null) {
+      stopGPSTracking(gpsWatchIdRef.current);
+      gpsWatchIdRef.current = null;
+      setIsTrackingLocation(false);
+      setLocation(null);
+      setGpsSpeed(null);
+      
+      // Voice confirmation
+      const confirmMsg = "GPS tracking stopped. Your privacy is important to me!";
+      forceSpeak(confirmMsg, () => setIsSpeaking(true), () => setIsSpeaking(false));
+    }
+  };
+
+  const handleSendETAUpdate = async () => {
+    if (!location || !currentLoad || !carrier) {
+      setMessages(prev => [...prev, {
+        from: 'pure',
+        text: "I need your current GPS location and an active load to send an ETA update. Enable GPS tracking and set an active load first.",
+        timestamp: new Date(),
+        mood: 'concerned'
+      }]);
+      return;
+    }
+
+    try {
+      // Calculate ETA
+      const eta = calculateETA(
+        location.latitude,
+        location.longitude,
+        currentLoad.destLat,
+        currentLoad.destLon
+      );
+
+      // Send email via API
+      const response = await fetch(`${BACKEND_URL}/api/gps/send-eta-update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brokerEmail: currentLoad.brokerEmail,
+          carrierInfo: {
+            companyName: carrier.companyName,
+            name: personalData?.name || carrier.name || 'Driver',
+            mcNumber: carrier.mcNumber,
+            dotNumber: carrier.dotNumber,
+            phone: carrier.phone
+          },
+          currentLocation: {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            speed: gpsSpeed
+          },
+          destination: {
+            address: currentLoad.destination
+          },
+          eta: {
+            distance: eta.distance,
+            duration: (eta.hours * 60) + eta.minutes,
+            eta: eta.etaString,
+            hoursRemaining: `${eta.hours}.${Math.round((eta.minutes / 60) * 10)}`
+          },
+          loadNumber: currentLoad.loadNumber
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          from: 'pure',
+          text: `ETA update sent to ${currentLoad.brokerEmail}! They know you're ${eta.distance} miles out and arriving around ${eta.etaString}. Safe travels, driver!`,
+          timestamp: new Date(),
+          mood: 'accomplished',
+          skill: 'eta update'
+        }]);
+        
+        forceSpeak(`ETA update sent! The broker knows you'll arrive in about ${eta.hours} hours.`, 
+          () => setIsSpeaking(true), 
+          () => setIsSpeaking(false)
+        );
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('ETA update error:', error);
+      setMessages(prev => [...prev, {
+        from: 'pure',
+        text: "I had trouble sending the ETA update. Check your connection and try again, or the API endpoint may not be deployed yet.",
+        timestamp: new Date(),
+        mood: 'concerned'
+      }]);
+    }
+  };
+
+  const handleServiceRequest = (service) => {
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${service.lat},${service.lon}`;
+    
+    setMessages(prev => [...prev, {
+      from: 'pure',
+      text: `Opening directions to ${service.name} (${service.distance} miles away)${service.brand ? ` - ${service.brand}` : ''}. Drive safe!`,
+      timestamp: new Date(),
+      mood: 'helpful',
+      skill: 'navigation'
+    }]);
+
+    // Open Google Maps in new tab
+    window.open(googleMapsUrl, '_blank');
+    
+    // Voice confirmation
+    forceSpeak(`Navigating to ${service.name}, ${service.distance} miles away.`, 
+      () => setIsSpeaking(true), 
+      () => setIsSpeaking(false)
+    );
+  };
+
   const handleDocumentUpload = (docType, fileData) => {
     setDocuments(prev => ({
       ...prev,
@@ -1522,20 +2110,190 @@ export default function PureDispatcher() {
         await forceSpeak(data.response, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }
     } catch (err) {
-      // Mock response
-      const mockResponses = {
-        fuel: "I found 3 fuel stations nearby:\n\n1. Loves Travel Stop - 2.3 miles, $3.45/gal\n2. Pilot Flying J - 3.1 miles, $3.42/gal\n3. TA Truck Stop - 4.5 miles, $3.48/gal\n\nShall I navigate you to the closest one?",
-        weather: "The weather on your route looks good! Clear skies for the next 48 hours with temperatures in the 60s. No delays expected.",
-        default: "I'm here to help! I can find fuel stations, check weather, book loads, email brokers, and more. What do you need?"
-      };
-
-      let responseText = mockResponses.default;
+      // Mock responses with GPS integration
       const lowerInput = inputText.toLowerCase();
-      if (lowerInput.includes('fuel') || lowerInput.includes('gas')) {
-        responseText = mockResponses.fuel;
-      } else if (lowerInput.includes('weather')) {
-        responseText = mockResponses.weather;
-      } else if (lowerInput.includes('email')) {
+      
+      // GPS-based responses
+      if (lowerInput.includes('location') || lowerInput.includes('where am i')) {
+        if (location) {
+          const googleMapsLink = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+          const speedText = location.speed ? `traveling at ${metersPerSecondToMph(location.speed)} mph` : 'stationary';
+          const responseText = `You're currently at ${formatLocation(location.latitude, location.longitude)}, ${speedText}. View on map: ${googleMapsLink}`;
+          
+          const pureMessage = {
+            from: 'pure',
+            text: responseText,
+            timestamp: new Date(),
+            mood: 'positive',
+            skill: 'getLocation'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+          if (audioEnabled) {
+            await forceSpeak(`You're at ${formatLocation(location.latitude, location.longitude)}, ${speedText}.`, () => setIsSpeaking(true), () => setIsSpeaking(false));
+          }
+        } else {
+          const pureMessage = {
+            from: 'pure',
+            text: "I don't have your GPS location yet. Would you like me to start tracking? I can give you real-time ETAs, find nearby services, and share your location with brokers.",
+            timestamp: new Date(),
+            mood: 'neutral',
+            skill: null
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        }
+        setIsTyping(false);
+        return;
+      }
+      
+      // ETA calculation
+      if (lowerInput.includes('eta') || lowerInput.includes('arrival') || lowerInput.includes('when will i arrive')) {
+        if (location && currentLoad?.destination) {
+          const destLat = currentLoad.destination.latitude || 40.7128; // Default NYC
+          const destLon = currentLoad.destination.longitude || -74.0060;
+          const etaData = calculateETA(location.latitude, location.longitude, destLat, destLon);
+          const responseText = `Based on your current location, you're ${etaData.distance} miles from your destination. ETA: ${etaData.hours}h ${etaData.minutes}m (around ${etaData.etaString}) at average speed.`;
+          
+          const pureMessage = {
+            from: 'pure',
+            text: responseText,
+            timestamp: new Date(),
+            mood: 'positive',
+            skill: 'calculateETA'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+          if (audioEnabled) {
+            await forceSpeak(responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+          }
+        } else if (!location) {
+          const pureMessage = {
+            from: 'pure',
+            text: "I need your GPS location to calculate ETA. Enable location tracking and I'll keep you updated!",
+            timestamp: new Date(),
+            mood: 'neutral'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        } else {
+          const pureMessage = {
+            from: 'pure',
+            text: "I need your destination info to calculate ETA. Which load are you running?",
+            timestamp: new Date(),
+            mood: 'neutral'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        }
+        setIsTyping(false);
+        return;
+      }
+      
+      // Nearby fuel stations
+      if (lowerInput.includes('fuel') || lowerInput.includes('gas') || lowerInput.includes('diesel')) {
+        if (location) {
+          const services = await findNearbyServices(location.latitude, location.longitude, 'fuel');
+          let responseText = `Found ${services.length} fuel stops near you:\n\n`;
+          services.forEach((service, idx) => {
+            responseText += `${idx + 1}. ${service.name} - ${service.distance} miles\n   ${service.address}\n   Amenities: ${service.amenities.join(', ')}\n\n`;
+          });
+          responseText += "Need navigation to any of these?";
+          
+          const pureMessage = {
+            from: 'pure',
+            text: responseText,
+            timestamp: new Date(),
+            mood: 'positive',
+            skill: 'findFuel'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+          if (audioEnabled) {
+            await forceSpeak(`Found ${services.length} fuel stops near you. The closest is ${services[0]?.name} at ${services[0]?.distance} miles.`, () => setIsSpeaking(true), () => setIsSpeaking(false));
+          }
+        } else {
+          const pureMessage = {
+            from: 'pure',
+            text: "Enable GPS tracking so I can find the nearest fuel stations for you!",
+            timestamp: new Date(),
+            mood: 'neutral'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        }
+        setIsTyping(false);
+        return;
+      }
+      
+      // Rest areas
+      if (lowerInput.includes('rest') || lowerInput.includes('park') || lowerInput.includes('break')) {
+        if (location) {
+          const services = await findNearbyServices(location.latitude, location.longitude, 'rest');
+          let responseText = `Found ${services.length} rest areas near you:\n\n`;
+          services.forEach((service, idx) => {
+            responseText += `${idx + 1}. ${service.name} - ${service.distance} miles\n   ${service.address}\n   ${service.amenities.join(', ')}\n\n`;
+          });
+          
+          const pureMessage = {
+            from: 'pure',
+            text: responseText,
+            timestamp: new Date(),
+            mood: 'positive',
+            skill: 'findRest'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        } else {
+          const pureMessage = {
+            from: 'pure',
+            text: "Turn on GPS tracking and I'll find rest areas for you!",
+            timestamp: new Date(),
+            mood: 'neutral'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        }
+        setIsTyping(false);
+        return;
+      }
+      
+      // Share location with broker
+      if (lowerInput.includes('share location') || lowerInput.includes('send location') || lowerInput.includes('broker location')) {
+        if (location) {
+          const shareData = formatLocationShare(location, personalData?.name || carrier?.companyName || 'Driver', currentLoad?.id || 'Current Load');
+          const pureMessage = {
+            from: 'pure',
+            text: `I've formatted your location to share:\n\n${shareData.text}\n\nWould you like me to email this to the broker?`,
+            timestamp: new Date(),
+            mood: 'positive',
+            skill: 'shareLocation'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        } else {
+          const pureMessage = {
+            from: 'pure',
+            text: "Enable GPS tracking first, then I can share your location with brokers!",
+            timestamp: new Date(),
+            mood: 'neutral'
+          };
+          setMessages(prev => [...prev, pureMessage]);
+        }
+        setIsTyping(false);
+        return;
+      }
+      
+      // Weather on route
+      if (lowerInput.includes('weather')) {
+        const responseText = "The weather on your route looks good! Clear skies for the next 48 hours with temperatures in the 60s. No delays expected.";
+        const pureMessage = {
+          from: 'pure',
+          text: responseText,
+          timestamp: new Date(),
+          mood: 'positive',
+          skill: 'getWeatherRoute'
+        };
+        setMessages(prev => [...prev, pureMessage]);
+        if (audioEnabled) {
+          await forceSpeak(responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        }
+        setIsTyping(false);
+        return;
+      }
+      
+      // Email draft
+      if (lowerInput.includes('email')) {
         // Email draft example
         const pureMessage = {
           from: 'pure',
@@ -1676,7 +2434,50 @@ export default function PureDispatcher() {
   const handleClaimLoad = (load) => {
     const claimedLoad = { ...load, status: 'claimed', claimedAt: new Date() };
     setLoadHistory(prev => [claimedLoad, ...prev]);
-    alert(`Load booked! Origin: ${load.origin.city}, ${load.origin.state} → Destination: ${load.destination.city}, ${load.destination.state}`);
+    
+    // Set as active load for GPS tracking
+    // In production, you'd geocode the destination address to get real coordinates
+    // For now, using approximate coordinates based on major cities
+    const cityCoords = {
+      'Los Angeles, CA': { lat: 34.0522, lon: -118.2437 },
+      'New York, NY': { lat: 40.7128, lon: -74.0060 },
+      'Chicago, IL': { lat: 41.8781, lon: -87.6298 },
+      'Houston, TX': { lat: 29.7604, lon: -95.3698 },
+      'Phoenix, AZ': { lat: 33.4484, lon: -112.0740 },
+      'Philadelphia, PA': { lat: 39.9526, lon: -75.1652 },
+      'San Antonio, TX': { lat: 29.4241, lon: -98.4936 },
+      'San Diego, CA': { lat: 32.7157, lon: -117.1611 },
+      'Dallas, TX': { lat: 32.7767, lon: -96.7970 },
+      'San Jose, CA': { lat: 37.3382, lon: -121.8863 },
+      'Seattle, WA': { lat: 47.6062, lon: -122.3321 },
+      'Denver, CO': { lat: 39.7392, lon: -104.9903 },
+      'Boston, MA': { lat: 42.3601, lon: -71.0589 },
+      'Miami, FL': { lat: 25.7617, lon: -80.1918 },
+      'Atlanta, GA': { lat: 33.7490, lon: -84.3880 }
+    };
+    
+    const destKey = `${load.destination.city}, ${load.destination.state}`;
+    const coords = cityCoords[destKey] || { lat: 34.0, lon: -118.0 }; // Default to LA
+    
+    setCurrentLoad({
+      loadNumber: load.id,
+      destination: destKey,
+      destLat: coords.lat,
+      destLon: coords.lon,
+      brokerEmail: 'broker@example.com', // In production, this would come from load data
+      pickupDate: load.pickupDate,
+      rate: load.rate
+    });
+    
+    setMessages(prev => [...prev, {
+      from: 'pure',
+      text: `Load booked and set as active! ${load.origin.city}, ${load.origin.state} → ${destKey}. Enable GPS tracking and I'll help you navigate and send ETA updates to the broker automatically.`,
+      timestamp: new Date(),
+      mood: 'accomplished',
+      skill: 'load booking'
+    }]);
+    
+    alert(`Load booked! Origin: ${load.origin.city}, ${load.origin.state} → Destination: ${destKey}`);
   };
 
   const handleNavigateToLocation = (location) => {
@@ -2223,6 +3024,24 @@ export default function PureDispatcher() {
                 <p className="text-xs text-gray-500">API Usage</p>
                 <p className="text-sm text-white">{carrier?.apiUsageRemaining || 0} / {carrier?.apiUsageLimit || 100}</p>
               </div>
+              {/* GPS Tracking Button */}
+              <button
+                onClick={toggleGPSTracking}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                  isTrackingLocation 
+                    ? 'bg-green-500 text-black hover:bg-green-400' 
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+                title={isTrackingLocation ? 'GPS Tracking Active' : 'Enable GPS Tracking'}
+              >
+                <Navigation className="w-5 h-5" />
+              </button>
+              {location && (
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Speed</p>
+                  <p className="text-sm text-white">{location.speed ? `${metersPerSecondToMph(location.speed)} mph` : '0 mph'}</p>
+                </div>
+              )}
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -2293,6 +3112,33 @@ export default function PureDispatcher() {
           </div>
         </div>
       </div>
+
+      {/* GPS Control Panel */}
+      <div className="border-b border-gray-800 bg-black">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <GPSControlPanel
+            location={location}
+            isTracking={isTrackingLocation}
+            onStartTracking={handleStartGPSTracking}
+            onStopTracking={handleStopGPSTracking}
+            speed={gpsSpeed}
+            currentLoad={currentLoad}
+            onSendETAUpdate={handleSendETAUpdate}
+          />
+        </div>
+      </div>
+
+      {/* Nearby Services Panel */}
+      {isTrackingLocation && location && (
+        <div className="border-b border-gray-800 bg-black">
+          <div className="max-w-4xl mx-auto px-6 py-4">
+            <NearbyServicesPanel
+              location={location}
+              onServiceRequest={handleServiceRequest}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-6 max-w-4xl mx-auto w-full bg-black">
