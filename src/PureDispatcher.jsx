@@ -84,13 +84,16 @@ const getSkillIcon = (skillName) => {
 };
 
 // =====================================================
-// LOGIN PAGE COMPONENT
+// LOGIN PAGE COMPONENT WITH FORGOT PASSWORD
 // =====================================================
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -98,6 +101,19 @@ function LoginPage({ onLogin }) {
     
     if (!email || !password) {
       setError('Please enter email and password');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Password strength check
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -122,6 +138,118 @@ function LoginPage({ onLogin }) {
     }, 800);
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    setResetMessage('');
+
+    if (!resetEmail) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Mock password reset - in production, call backend API
+    // In production: POST to /api/auth/forgot-password
+    setTimeout(() => {
+      setResetMessage('If an account exists with this email, you will receive password reset instructions shortly.');
+      setResetEmail('');
+      setIsLoading(false);
+      
+      // Auto-close forgot password modal after 3 seconds
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setResetMessage('');
+      }, 3000);
+    }, 1000);
+  };
+
+  // Forgot Password View
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Truck className="w-8 h-8 text-black" />
+            </div>
+            <h1 className="text-4xl font-light text-white mb-2">Pure Dispatch</h1>
+            <p className="text-gray-400">Reset Your Password</p>
+          </div>
+
+          <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800">
+            <h2 className="text-2xl font-light text-white mb-2">Forgot Password</h2>
+            <p className="text-sm text-gray-400 mb-6">
+              Enter your email address and we'll send you instructions to reset your password.
+            </p>
+            
+            {error && (
+              <div className="mb-4 bg-red-900/20 border border-red-500 rounded-xl p-3 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-300">{error}</p>
+              </div>
+            )}
+
+            {resetMessage && (
+              <div className="mb-4 bg-green-900/20 border border-green-500 rounded-xl p-3 flex items-start gap-2">
+                <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-green-300">{resetMessage}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setError('');
+                  setResetMessage('');
+                }}
+                className="text-sm text-green-400 hover:text-green-300 font-medium"
+              >
+                ← Back to Login
+              </button>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-600 text-center mt-6">
+            By using Pure Dispatch, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Login View
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-6">
       <div className="max-w-md w-full">
@@ -152,17 +280,28 @@ function LoginPage({ onLogin }) {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
                 placeholder="your@email.com"
+                autoComplete="email"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-300">Password</label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
                 placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
 
