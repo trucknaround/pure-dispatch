@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn } from 'lucide-react';
+import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe } from 'lucide-react';
 
 // Backend URL
 const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -84,7 +84,7 @@ const getSkillIcon = (skillName) => {
 };
 
 // =====================================================
-// LOGIN PAGE COMPONENT WITH FORGOT PASSWORD
+// LOGIN PAGE COMPONENT (Enhanced with Forgot Password)
 // =====================================================
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -93,7 +93,7 @@ function LoginPage({ onLogin }) {
   const [error, setError] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
-  const [resetMessage, setResetMessage] = useState('');
+  const [resetSent, setResetSent] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -111,7 +111,7 @@ function LoginPage({ onLogin }) {
       return;
     }
 
-    // Password strength check
+    // Password validation
     if (password.length < 8) {
       setError('Password must be at least 8 characters');
       return;
@@ -119,21 +119,35 @@ function LoginPage({ onLogin }) {
 
     setIsLoading(true);
     
-    // Mock authentication - in production, call your backend
+    // Check stored credentials
     setTimeout(() => {
-      const savedCarrier = localStorage.getItem('pureCarrier');
-      if (savedCarrier) {
+      const storedCredentials = localStorage.getItem('pureUserCredentials');
+      
+      if (storedCredentials) {
         try {
-          const carrierData = JSON.parse(savedCarrier);
-          // In production, verify email/password match
-          onLogin(carrierData);
+          const { email: storedEmail, password: storedPassword } = JSON.parse(storedCredentials);
+          
+          if (email.toLowerCase() === storedEmail.toLowerCase() && password === storedPassword) {
+            // Correct credentials - load carrier data
+            const savedCarrier = localStorage.getItem('pureCarrier');
+            if (savedCarrier) {
+              const carrierData = JSON.parse(savedCarrier);
+              onLogin(carrierData);
+            } else {
+              setError('Account data not found. Please complete registration.');
+              onLogin({ isNewUser: true });
+            }
+          } else {
+            setError('Invalid email or password');
+          }
         } catch (e) {
-          setError('Invalid credentials');
+          setError('Error loading account');
         }
       } else {
-        // New user - proceed to registration
-        onLogin(null);
+        // No stored credentials - new user
+        onLogin({ isNewUser: true });
       }
+      
       setIsLoading(false);
     }, 800);
   };
@@ -141,115 +155,117 @@ function LoginPage({ onLogin }) {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     setError('');
-    setResetMessage('');
 
     if (!resetEmail) {
       setError('Please enter your email address');
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(resetEmail)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)) {
       setError('Please enter a valid email address');
       return;
     }
 
     setIsLoading(true);
 
-    // Mock password reset - in production, call backend API
-    // In production: POST to /api/auth/forgot-password
+    // Mock password reset - in production, call backend to send reset email
     setTimeout(() => {
-      setResetMessage('If an account exists with this email, you will receive password reset instructions shortly.');
-      setResetEmail('');
-      setIsLoading(false);
+      // In production: Send email with secure reset token
+      // await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ email: resetEmail })
+      // });
       
-      // Auto-close forgot password modal after 3 seconds
-      setTimeout(() => {
-        setShowForgotPassword(false);
-        setResetMessage('');
-      }, 3000);
+      setResetSent(true);
+      setIsLoading(false);
     }, 1000);
   };
 
-  // Forgot Password View
   if (showForgotPassword) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center px-6">
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Truck className="w-8 h-8 text-black" />
+              <Lock className="w-8 h-8 text-black" />
             </div>
-            <h1 className="text-4xl font-light text-white mb-2">Pure Dispatch</h1>
-            <p className="text-gray-400">Reset Your Password</p>
+            <h1 className="text-4xl font-light text-white mb-2">Reset Password</h1>
+            <p className="text-gray-400">We'll send you a reset link</p>
           </div>
 
           <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800">
-            <h2 className="text-2xl font-light text-white mb-2">Forgot Password</h2>
-            <p className="text-sm text-gray-400 mb-6">
-              Enter your email address and we'll send you instructions to reset your password.
-            </p>
-            
-            {error && (
-              <div className="mb-4 bg-red-900/20 border border-red-500 rounded-xl p-3 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-300">{error}</p>
+            {resetSent ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-6 h-6 text-green-400" />
+                </div>
+                <h3 className="text-xl font-medium text-white mb-2">Check Your Email</h3>
+                <p className="text-gray-400 mb-6">
+                  We've sent password reset instructions to <span className="text-green-400">{resetEmail}</span>
+                </p>
+                <button
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setResetSent(false);
+                    setResetEmail('');
+                  }}
+                  className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 transition-colors font-medium"
+                >
+                  Back to Login
+                </button>
               </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-light text-white mb-6">Forgot Password</h2>
+                
+                {error && (
+                  <div className="mb-4 bg-red-900/20 border border-red-500 rounded-xl p-3 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-300">{error}</p>
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    {isLoading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setError('');
+                    }}
+                    className="text-sm text-gray-400 hover:text-green-400"
+                  >
+                    ← Back to Login
+                  </button>
+                </div>
+              </>
             )}
-
-            {resetMessage && (
-              <div className="mb-4 bg-green-900/20 border border-green-500 rounded-xl p-3 flex items-start gap-2">
-                <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-green-300">{resetMessage}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
-                <input
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
-                  placeholder="your@email.com"
-                  autoComplete="email"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors font-medium"
-              >
-                {isLoading ? 'Sending...' : 'Send Reset Link'}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => {
-                  setShowForgotPassword(false);
-                  setError('');
-                  setResetMessage('');
-                }}
-                className="text-sm text-green-400 hover:text-green-300 font-medium"
-              >
-                ← Back to Login
-              </button>
-            </div>
           </div>
-
-          <p className="text-xs text-gray-600 text-center mt-6">
-            By using Pure Dispatch, you agree to our Terms of Service and Privacy Policy
-          </p>
         </div>
       </div>
     );
   }
 
-  // Login View
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-6">
       <div className="max-w-md w-full">
@@ -290,7 +306,7 @@ function LoginPage({ onLogin }) {
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                  className="text-xs text-green-400 hover:text-green-300"
                 >
                   Forgot password?
                 </button>
@@ -488,7 +504,339 @@ function DocumentUploadSection({ title, docType, existingDoc, onUpload, onDelete
     </div>
   );
 }
+// =====================================================
+// PERSONAL REGISTRATION COMPONENT (STEP 1)
+// =====================================================
+function PersonalRegistration({ onComplete, existingData }) {
+  const [formData, setFormData] = useState({
+    name: existingData?.name || '',
+    phone: existingData?.phone || '',
+    email: existingData?.email || '',
+    password: '',
+    confirmPassword: '',
+    weightLimit: existingData?.weightLimit || 44000,
+    pickupLocation: existingData?.pickupLocation || { city: '', state: '' },
+    pickupRadius: existingData?.pickupRadius || 50,
+    destination: existingData?.destination || { city: '', state: '' },
+    destinationRadius: existingData?.destinationRadius || 50,
+    language: existingData?.language || 'English'
+  });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+
+    // Validation
+    if (!formData.name || !formData.phone || !formData.email || !formData.password) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Phone validation (basic)
+    const phoneRegex = /^[\d\s\-\(\)]+$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setError('Please enter a valid phone number');
+      return;
+    }
+
+    // Password validation
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setTimeout(() => {
+      // Pass data to parent (don't include confirmPassword)
+      const { confirmPassword, ...dataToSave } = formData;
+      onComplete(dataToSave);
+      setIsSubmitting(false);
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen bg-black">
+      <div className="border-b border-gray-800">
+        <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+            <Truck className="w-5 h-5 text-black" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
+            <p className="text-sm text-gray-400">Personal Information - Step 1 of 2</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <h2 className="text-3xl font-light text-white mb-2">Create Your Account</h2>
+          <p className="text-gray-400">Enter your personal information and load preferences.</p>
+        </div>
+
+        {error && (
+          <div className="mb-6 bg-red-900/20 border border-red-500 rounded-xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-300">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Information */}
+          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <User className="w-5 h-5 text-green-400" />
+              Personal Information
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="john@example.com"
+                  autoComplete="email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Password *</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({...prev, password: e.target.value}))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                />
+                <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password *</label>
+                <input
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData(prev => ({...prev, confirmPassword: e.target.value}))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Weight Limit */}
+          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <Package className="w-5 h-5 text-green-400" />
+              Load Preferences
+            </h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Maximum Weight Limit: {formData.weightLimit.toLocaleString()} lbs
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="44000"
+                step="1000"
+                value={formData.weightLimit}
+                onChange={(e) => setFormData(prev => ({...prev, weightLimit: parseInt(e.target.value)}))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>0 lbs</span>
+                <span>44,000 lbs</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Pickup Location */}
+          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-green-400" />
+              Pickup Location
+            </h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">City</label>
+                  <input
+                    type="text"
+                    value={formData.pickupLocation.city}
+                    onChange={(e) => setFormData(prev => ({...prev, pickupLocation: {...prev.pickupLocation, city: e.target.value}}))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="Chicago"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">State</label>
+                  <input
+                    type="text"
+                    value={formData.pickupLocation.state}
+                    onChange={(e) => setFormData(prev => ({...prev, pickupLocation: {...prev.pickupLocation, state: e.target.value}}))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="IL"
+                    maxLength="2"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Pickup Radius: {formData.pickupRadius} miles
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  step="10"
+                  value={formData.pickupRadius}
+                  onChange={(e) => setFormData(prev => ({...prev, pickupRadius: parseInt(e.target.value)}))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0 mi</span>
+                  <span>200 mi</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Destination */}
+          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <Navigation className="w-5 h-5 text-green-400" />
+              Destination
+            </h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">City</label>
+                  <input
+                    type="text"
+                    value={formData.destination.city}
+                    onChange={(e) => setFormData(prev => ({...prev, destination: {...prev.destination, city: e.target.value}}))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="Los Angeles"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">State</label>
+                  <input
+                    type="text"
+                    value={formData.destination.state}
+                    onChange={(e) => setFormData(prev => ({...prev, destination: {...prev.destination, state: e.target.value}}))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="CA"
+                    maxLength="2"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Destination Radius: {formData.destinationRadius} miles
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  step="10"
+                  value={formData.destinationRadius}
+                  onChange={(e) => setFormData(prev => ({...prev, destinationRadius: parseInt(e.target.value)}))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0 mi</span>
+                  <span>200 mi</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Language */}
+          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <Globe className="w-5 h-5 text-green-400" />
+              Language Preference
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({...prev, language: 'English'}))}
+                className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                  formData.language === 'English'
+                    ? 'border-green-500 bg-green-500/10 text-green-400'
+                    : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'
+                }`}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({...prev, language: 'Spanish'}))}
+                className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                  formData.language === 'Spanish'
+                    ? 'border-green-500 bg-green-500/10 text-green-400'
+                    : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'
+                }`}
+              >
+                Spanish (Español)
+              </button>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-green-500 text-black py-4 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors font-medium text-lg"
+          >
+            {isSubmitting ? 'Saving...' : 'Continue to Carrier Information →'}
+          </button>
+        </form>
+
+        <p className="text-xs text-gray-600 text-center mt-6">
+          Step 1 of 2 - Next: Carrier and equipment details
+        </p>
+      </div>
+    </div>
+  );
+}
 // =====================================================
 // CARRIER REGISTRATION COMPONENT (Enhanced with Trailer Sizes)
 // =====================================================
@@ -501,7 +849,6 @@ function CarrierRegistration({ onRegistrationComplete, carrier }) {
     companyName: carrier?.companyName || '',
     mcNumber: carrier?.mcNumber || '',
     dotNumber: carrier?.dotNumber || '',
-    email: carrier?.email || '',
     phone: carrier?.phone || '',
     equipmentTypes: carrier?.equipmentTypes || [],
     trailerSizes: carrier?.trailerSizes || [],
@@ -539,7 +886,7 @@ function CarrierRegistration({ onRegistrationComplete, carrier }) {
 
   const handleSubmit = async () => {
     setError('');
-    if (!formData.companyName || !formData.mcNumber || !formData.dotNumber || !formData.email || !formData.phone) {
+    if (!formData.companyName || !formData.mcNumber || !formData.dotNumber || !formData.phone) {
       setError('Please fill in all required fields');
       return;
     }
@@ -589,15 +936,15 @@ function CarrierRegistration({ onRegistrationComplete, carrier }) {
             <Truck className="w-5 h-5 text-black" />
           </div>
           <div>
-            <h1 className="text-2xl font-light text-white">Pure</h1>
-            <p className="text-sm text-gray-400">{carrier ? 'Update Profile' : 'Carrier Registration'}</p>
+            <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
+            <p className="text-sm text-gray-400">Carrier Information - Step 2 of 2</p>
           </div>
         </div>
       </div>
       <div className="max-w-2xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <h2 className="text-3xl font-light text-white mb-2">{carrier ? 'Update Your Profile' : 'Register Your Carrier'}</h2>
-          <p className="text-gray-400">Get access to Pure's dispatch AI and load board integration.</p>
+          <h2 className="text-3xl font-light text-white mb-2">Carrier & Equipment Details</h2>
+          <p className="text-gray-400">Complete your carrier registration with company and equipment information.</p>
         </div>
         {error && (
           <div className="mb-6 bg-red-900/20 border border-red-500 rounded-xl p-4 flex items-start gap-3">
@@ -634,10 +981,6 @@ function CarrierRegistration({ onRegistrationComplete, carrier }) {
               Contact Information
             </h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
-                <input type="email" value={formData.email} onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500" placeholder="dispatch@company.com" />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
                 <input type="tel" value={formData.phone} onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500" placeholder="(555) 123-4567" />
@@ -768,6 +1111,8 @@ export default function PureDispatcher() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [registrationStep, setRegistrationStep] = useState('none'); // 'none', 'personal', 'carrier'
+  const [personalData, setPersonalData] = useState(null);
   
   // Existing state
   const [carrier, setCarrier] = useState(null);
@@ -940,28 +1285,52 @@ export default function PureDispatcher() {
     });
   };
 
-  const handleLogin = (carrierData) => {
-    if (carrierData) {
-      setCarrier(carrierData);
+  const handleLogin = (data) => {
+    if (data && data.isNewUser) {
+      // New user - start registration flow
       setIsLoggedIn(true);
+      setRegistrationStep('personal');
+    } else if (data) {
+      // Existing user - load their data
+      setCarrier(data);
       setIsRegistered(true);
-      setShowDashboard(true);
-    } else {
-      // New user - go to registration
       setIsLoggedIn(true);
-      setIsRegistered(false);
+      setShowDashboard(true);
+      setRegistrationStep('none');
+    } else {
+      // Fallback - start registration
+      setIsLoggedIn(true);
+      setRegistrationStep('personal');
     }
   };
 
+  const handlePersonalRegistrationComplete = (data) => {
+    setPersonalData(data);
+    setRegistrationStep('carrier');
+    
+    // Save credentials for login
+    localStorage.setItem('pureUserCredentials', JSON.stringify({
+      email: data.email,
+      password: data.password // In production, hash this server-side
+    }));
+  };
+
   const handleRegistrationComplete = (carrierData) => {
-    setCarrier(carrierData);
+    // Merge personal data with carrier data
+    const completeData = {
+      ...personalData,
+      ...carrierData
+    };
+    
+    setCarrier(completeData);
     setIsRegistered(true);
     setShowDashboard(true);
-    localStorage.setItem('pureCarrier', JSON.stringify(carrierData));
+    setRegistrationStep('none');
+    localStorage.setItem('pureCarrier', JSON.stringify(completeData));
     
     // Welcome voice message
     setTimeout(() => {
-      const welcomeText = `Hey there! I'm Pure, your AI dispatcher. Welcome aboard, ${carrierData.companyName}! I'm here to help you find fuel, check weather, book loads, and handle everything you need on the road. Just ask me anything!`;
+      const welcomeText = `Hey there! I'm Pure, your AI dispatcher. Welcome aboard, ${personalData?.name || 'driver'}! I'm here to help you find fuel, check weather, book loads, and handle everything you need on the road. Just ask me anything!`;
       forceSpeak(welcomeText, () => setIsSpeaking(true), () => setIsSpeaking(false));
     }, 1000);
   };
@@ -1338,9 +1707,18 @@ export default function PureDispatcher() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  // Show registration if logged in but not registered
+  // Show registration steps if logged in
+  if (isLoggedIn && registrationStep === 'personal') {
+    return <PersonalRegistration onComplete={handlePersonalRegistrationComplete} existingData={personalData} />;
+  }
+
+  if (isLoggedIn && registrationStep === 'carrier') {
+    return <CarrierRegistration onRegistrationComplete={handleRegistrationComplete} carrier={null} />;
+  }
+
+  // Legacy check for users who haven't completed registration
   if (!isRegistered) {
-    return <CarrierRegistration onRegistrationComplete={handleRegistrationComplete} />;
+    return <CarrierRegistration onRegistrationComplete={handleRegistrationComplete} carrier={carrier} />;
   }
 
   // Show dashboard if user just logged in/registered
@@ -1917,7 +2295,7 @@ export default function PureDispatcher() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 max-w-4xl mx-auto w-full">
+      <div className="flex-1 overflow-y-auto px-6 py-6 max-w-4xl mx-auto w-full bg-black">
         {messages.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
