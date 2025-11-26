@@ -95,9 +95,9 @@ const startGPSTracking = (onLocation, onError) => {
   }
 
   const options = {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 0
+    enableHighAccuracy: false, // Use lower accuracy for stability
+    timeout: 15000,
+    maximumAge: 10000 // Cache position for 10 seconds to reduce updates
   };
 
   const watchId = navigator.geolocation.watchPosition(
@@ -265,9 +265,9 @@ Map: ${googleMapsLink}`,
 };
 
 // =====================================================
-// GPS CONTROL PANEL COMPONENT
+// GPS CONTROL PANEL COMPONENT (Memoized for performance)
 // =====================================================
-function GPSControlPanel({ 
+const GPSControlPanel = React.memo(({ 
   location, 
   isTracking, 
   onStartTracking, 
@@ -275,7 +275,7 @@ function GPSControlPanel({
   speed,
   currentLoad,
   onSendETAUpdate 
-}) {
+}) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -372,15 +372,17 @@ function GPSControlPanel({
       )}
     </div>
   );
-}
+});
 
 // =====================================================
-// NEARBY SERVICES COMPONENT
+// NEARBY SERVICES COMPONENT (Memoized for performance)
 // =====================================================
-function NearbyServicesPanel({ location, onServiceRequest }) {
+const NearbyServicesPanel = React.memo(({ location, onServiceRequest }) => {
   const [services, setServices] = useState([]);
   const [selectedType, setSelectedType] = useState('fuel');
   const [isLoading, setIsLoading] = useState(false);
+  const hasSearchedRef = useRef(false);
+  const lastSearchLocationRef = useRef(null);
 
   const serviceTypes = [
     { id: 'fuel', name: 'Fuel', icon: Fuel },
@@ -394,17 +396,30 @@ function NearbyServicesPanel({ location, onServiceRequest }) {
   const searchServices = async (type) => {
     if (!location) return;
     
+    // Don't search if we're already loading
+    if (isLoading) return;
+    
     setIsLoading(true);
     const results = await findNearbyServices(location.latitude, location.longitude, 25, type);
     setServices(results);
     setIsLoading(false);
+    lastSearchLocationRef.current = { lat: location.latitude, lon: location.longitude };
   };
 
+  // Only search when service type changes, NOT on every location update
   useEffect(() => {
-    if (location && selectedType) {
+    if (location && selectedType && !hasSearchedRef.current) {
       searchServices(selectedType);
+      hasSearchedRef.current = true;
     }
-  }, [location, selectedType]);
+  }, [selectedType]);
+
+  const handleTypeChange = (type) => {
+    setSelectedType(type);
+    if (location) {
+      searchServices(type);
+    }
+  };
 
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
@@ -419,7 +434,7 @@ function NearbyServicesPanel({ location, onServiceRequest }) {
           return (
             <button
               key={type.id}
-              onClick={() => setSelectedType(type.id)}
+              onClick={() => handleTypeChange(type.id)}
               className={`p-2 rounded-lg border-2 transition-all ${
                 selectedType === type.id
                   ? 'border-green-500 bg-green-500/10 text-green-400'
@@ -478,7 +493,7 @@ function NearbyServicesPanel({ location, onServiceRequest }) {
       )}
     </div>
   );
-}
+});
 
 // =====================================================
 // LOGIN PAGE COMPONENT (Enhanced with Forgot Password)
@@ -1551,6 +1566,7 @@ export default function PureDispatcher() {
   const [nearbyServices, setNearbyServices] = useState([]);
   const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
   const gpsWatchIdRef = useRef(null);
+  const lastLocationRef = useRef(null); // Stores last location with timestamp for throttling
 
   const messagesEndRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -1849,13 +1865,38 @@ export default function PureDispatcher() {
   const handleStartGPSTracking = () => {
     const watchId = startGPSTracking(
       (locationData) => {
-        setLocation(locationData);
-        setLocationError(null);
+        // Throttle: Only allow updates every 5 seconds
+        const now = Date.now();
+        const lastUpdate = lastLocationRef.current?.timestamp || 0;
+        const timeSinceLastUpdate = now - lastUpdate;
         
-        // Update speed
-        if (locationData.speed !== null) {
-          const speedMph = metersPerSecondToMph(locationData.speed);
-          setGpsSpeed(speedMph);
+        // Skip this update if less than 5 seconds since last
+        if (timeSinceLastUpdate < 5000 && lastLocationRef.current) {
+          return; // Ignore this update
+        }
+        
+        // Check if location changed significantly (>50 meters / ~0.03 miles)
+        const hasSignificantChange = !lastLocationRef.current || 
+          calculateDistance(
+            lastLocationRef.current.latitude,
+            lastLocationRef.current.longitude,
+            locationData.latitude,
+            locationData.longitude
+          ) > 0.03; // ~50 meters in miles
+        
+        // Only update if moved significantly OR first update
+        if (hasSignificantChange || !lastLocationRef.current) {
+          setLocation(locationData);
+          lastLocationRef.current = { ...locationData, timestamp: now };
+          setLocationError(null);
+          
+          // Update speed
+          if (locationData.speed !== null && locationData.speed > 0) {
+            const speedMph = metersPerSecondToMph(locationData.speed);
+            setGpsSpeed(speedMph);
+          } else {
+            setGpsSpeed(null);
+          }
         }
       },
       (error) => {
@@ -1881,6 +1922,7 @@ export default function PureDispatcher() {
       setIsTrackingLocation(false);
       setLocation(null);
       setGpsSpeed(null);
+      lastLocationRef.current = null;
       
       // Voice confirmation
       const confirmMsg = "GPS tracking stopped. Your privacy is important to me!";
