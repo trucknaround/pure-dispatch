@@ -42,8 +42,13 @@ const forceSpeak = async (text, onStart, onEnd) => {
       ? text.substring(0, maxLength) + '...' 
       : text;
 
+    console.log('🎤 Requesting ElevenLabs voice for:', textToSpeak.substring(0, 50) + '...');
+
     // Call backend to generate voice
-    const response = await fetch(`${BACKEND_URL}/api/speak`, {
+    const apiUrl = `${BACKEND_URL}/api/speak`;
+    console.log('🎤 API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -51,11 +56,16 @@ const forceSpeak = async (text, onStart, onEnd) => {
       body: JSON.stringify({ text: textToSpeak })
     });
 
+    console.log('🎤 API Response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`Backend returned ${response.status}`);
+      const errorText = await response.text();
+      console.error('🎤 API Error:', response.status, errorText);
+      throw new Error(`Backend returned ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('🎤 API Response received:', data.success ? 'Success' : 'Failed');
 
     if (!data.success || !data.audio) {
       throw new Error('Invalid response from voice API');
@@ -71,25 +81,28 @@ const forceSpeak = async (text, onStart, onEnd) => {
 
     // Setup event handlers
     currentVoiceAudio.onended = () => {
+      console.log('🎤 Audio playback finished');
       currentVoiceAudio = null;
       if (onEnd) onEnd();
     };
 
     currentVoiceAudio.onerror = (error) => {
-      console.error('Voice playback error:', error);
+      console.error('🎤 Voice playback error:', error);
       currentVoiceAudio = null;
       if (onEnd) onEnd();
     };
 
     // Play the audio
+    console.log('🎤 Playing ElevenLabs audio...');
     await currentVoiceAudio.play();
+    console.log('🎤 Audio playback started successfully');
     return true;
 
   } catch (error) {
-    console.error('ElevenLabs voice error:', error);
+    console.error('🎤 ElevenLabs voice error:', error);
+    console.log('🎤 Falling back to browser TTS...');
     
     // Fallback to browser text-to-speech if ElevenLabs fails
-    console.log('Falling back to browser TTS...');
     return fallbackToSystemVoice(text, onStart, onEnd);
   }
 };
@@ -99,9 +112,10 @@ const forceSpeak = async (text, onStart, onEnd) => {
  * Used when ElevenLabs API is unavailable
  */
 const fallbackToSystemVoice = (text, onStart, onEnd) => {
+  console.log('🔊 Using browser TTS fallback');
   return new Promise((resolve) => {
     if (!window.speechSynthesis) {
-      console.error('speechSynthesis not available');
+      console.error('🔊 speechSynthesis not available');
       if (onEnd) onEnd();
       resolve(false);
       return;
@@ -110,6 +124,7 @@ const fallbackToSystemVoice = (text, onStart, onEnd) => {
     window.speechSynthesis.cancel();
     
     setTimeout(() => {
+      console.log('🔊 Creating browser TTS utterance');
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.9;      // Slightly slower for clarity
       utterance.pitch = 1.0;
@@ -117,19 +132,23 @@ const fallbackToSystemVoice = (text, onStart, onEnd) => {
       utterance.lang = 'en-US';
       
       utterance.onstart = () => { 
+        console.log('🔊 Browser TTS started');
         if (onStart) onStart(); 
       };
       
       utterance.onend = () => { 
+        console.log('🔊 Browser TTS finished');
         if (onEnd) onEnd(); 
         resolve(true); 
       };
       
       utterance.onerror = () => { 
+        console.error('🔊 Browser TTS error');
         if (onEnd) onEnd(); 
         resolve(false); 
       };
       
+      console.log('🔊 Speaking with browser TTS...');
       window.speechSynthesis.speak(utterance);
     }, 100);
   });
