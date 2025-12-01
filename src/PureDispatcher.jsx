@@ -6,27 +6,152 @@ const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname ==
   ? 'http://localhost:8080'
   : '';
 
-// Text-to-Speech
-const forceSpeak = (text, onStart, onEnd) => {
+// =====================================================
+// ELEVENLABS VOICE - PURE'S AI VOICE
+// =====================================================
+
+// Current audio instance (for stopping/managing playback)
+let currentVoiceAudio = null;
+
+/**
+ * Pure's Voice using ElevenLabs AI
+ * Professional, natural-sounding voice for Pure's responses
+ * @param {string} text - Text to speak
+ * @param {function} onStart - Callback when audio starts playing
+ * @param {function} onEnd - Callback when audio finishes
+ * @returns {Promise<boolean>} - True if succeeded, false if failed
+ */
+const forceSpeak = async (text, onStart, onEnd) => {
+  try {
+    // Stop any currently playing audio
+    if (currentVoiceAudio) {
+      currentVoiceAudio.pause();
+      currentVoiceAudio = null;
+    }
+
+    // Validate text
+    if (!text || text.trim().length === 0) {
+      console.warn('forceSpeak: Empty text provided');
+      if (onEnd) onEnd();
+      return false;
+    }
+
+    // Limit text length
+    const maxLength = 5000;
+    const textToSpeak = text.length > maxLength 
+      ? text.substring(0, maxLength) + '...' 
+      : text;
+
+    // Call backend to generate voice
+    const response = await fetch(`${BACKEND_URL}/api/speak`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text: textToSpeak })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend returned ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success || !data.audio) {
+      throw new Error('Invalid response from voice API');
+    }
+
+    // Notify that audio is starting
+    if (onStart) onStart();
+
+    // Create and configure audio element
+    currentVoiceAudio = new Audio(data.audio);
+    currentVoiceAudio.volume = 0.85;          // ← VOLUME: Clear but not too loud
+    currentVoiceAudio.playbackRate = 0.92;    // ← TIMING: 92% speed for smooth delivery
+
+    // Setup event handlers
+    currentVoiceAudio.onended = () => {
+      currentVoiceAudio = null;
+      if (onEnd) onEnd();
+    };
+
+    currentVoiceAudio.onerror = (error) => {
+      console.error('Voice playback error:', error);
+      currentVoiceAudio = null;
+      if (onEnd) onEnd();
+    };
+
+    // Play the audio
+    await currentVoiceAudio.play();
+    return true;
+
+  } catch (error) {
+    console.error('ElevenLabs voice error:', error);
+    
+    // Fallback to browser text-to-speech if ElevenLabs fails
+    console.log('Falling back to browser TTS...');
+    return fallbackToSystemVoice(text, onStart, onEnd);
+  }
+};
+
+/**
+ * Fallback to browser's built-in text-to-speech
+ * Used when ElevenLabs API is unavailable
+ */
+const fallbackToSystemVoice = (text, onStart, onEnd) => {
   return new Promise((resolve) => {
     if (!window.speechSynthesis) {
+      console.error('speechSynthesis not available');
+      if (onEnd) onEnd();
       resolve(false);
       return;
     }
+
     window.speechSynthesis.cancel();
+    
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
+      utterance.rate = 0.9;      // Slightly slower for clarity
       utterance.pitch = 1.0;
-      utterance.volume = 1.0;
+      utterance.volume = 0.85;
       utterance.lang = 'en-US';
-      utterance.onstart = () => { if (onStart) onStart(); };
-      utterance.onend = () => { if (onEnd) onEnd(); resolve(true); };
-      utterance.onerror = () => { if (onEnd) onEnd(); resolve(false); };
+      
+      utterance.onstart = () => { 
+        if (onStart) onStart(); 
+      };
+      
+      utterance.onend = () => { 
+        if (onEnd) onEnd(); 
+        resolve(true); 
+      };
+      
+      utterance.onerror = () => { 
+        if (onEnd) onEnd(); 
+        resolve(false); 
+      };
+      
       window.speechSynthesis.speak(utterance);
     }, 100);
   });
 };
+
+/**
+ * Stop any currently playing voice
+ */
+const stopSpeaking = () => {
+  // Stop ElevenLabs audio
+  if (currentVoiceAudio) {
+    currentVoiceAudio.pause();
+    currentVoiceAudio = null;
+  }
+  
+  // Stop browser TTS
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+};
+
+// =====================================================
 
 // Speech Recognition
 const startListening = (onResult, onEnd, onError) => {
@@ -95,9 +220,9 @@ const startGPSTracking = (onLocation, onError) => {
   }
 
   const options = {
-    enableHighAccuracy: false, // Use lower accuracy for stability
-    timeout: 15000,
-    maximumAge: 10000 // Cache position for 10 seconds to reduce updates
+    enableHighAccuracy: true,
+    timeout: 15000, // 15 seconds
+    maximumAge: 5000 // Cache position for 5 seconds - reduces update frequency
   };
 
   const watchId = navigator.geolocation.watchPosition(
@@ -1566,7 +1691,8 @@ export default function PureDispatcher() {
   const [nearbyServices, setNearbyServices] = useState([]);
   const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
   const gpsWatchIdRef = useRef(null);
-  const lastLocationRef = useRef(null); // Stores last location with timestamp for throttling
+  const gpsDebounceRef = useRef(null);
+  const lastLocationRef = useRef(null);
 
   const messagesEndRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -1810,10 +1936,9 @@ export default function PureDispatcher() {
       // Close profile menu immediately
       setShowProfileMenu(false);
       
-      // Stop any active speech and voice
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
+      // Stop any active speech and voice (ElevenLabs or browser TTS)
+      stopSpeaking();
+      
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -1865,29 +1990,20 @@ export default function PureDispatcher() {
   const handleStartGPSTracking = () => {
     const watchId = startGPSTracking(
       (locationData) => {
-        // Throttle: Only allow updates every 5 seconds
-        const now = Date.now();
-        const lastUpdate = lastLocationRef.current?.timestamp || 0;
-        const timeSinceLastUpdate = now - lastUpdate;
-        
-        // Skip this update if less than 5 seconds since last
-        if (timeSinceLastUpdate < 5000 && lastLocationRef.current) {
-          return; // Ignore this update
-        }
-        
-        // Check if location changed significantly (>50 meters / ~0.03 miles)
-        const hasSignificantChange = !lastLocationRef.current || 
+        // Only update if location changed significantly (>50 meters or ~0.03 miles)
+        // This prevents jumpiness from GPS drift
+        const shouldUpdate = !lastLocationRef.current || 
           calculateDistance(
             lastLocationRef.current.latitude,
             lastLocationRef.current.longitude,
             locationData.latitude,
             locationData.longitude
-          ) > 0.03; // ~50 meters in miles
+          ) > 0.03; // ~50 meters minimum movement
         
-        // Only update if moved significantly OR first update
-        if (hasSignificantChange || !lastLocationRef.current) {
+        if (shouldUpdate) {
+          // Update immediately for smooth tracking
           setLocation(locationData);
-          lastLocationRef.current = { ...locationData, timestamp: now };
+          lastLocationRef.current = locationData;
           setLocationError(null);
           
           // Update speed
@@ -1916,6 +2032,12 @@ export default function PureDispatcher() {
   };
 
   const handleStopGPSTracking = () => {
+    // Clear any pending debounced update
+    if (gpsDebounceRef.current) {
+      clearTimeout(gpsDebounceRef.current);
+      gpsDebounceRef.current = null;
+    }
+    
     if (gpsWatchIdRef.current !== null) {
       stopGPSTracking(gpsWatchIdRef.current);
       gpsWatchIdRef.current = null;
