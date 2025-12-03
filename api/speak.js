@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
 
     // ElevenLabs API configuration
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-    const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Rachel - Professional female voice
+    const VOICE_ID = 'aMSt68OGf4xUZAnLpTU8'; // Pure's custom voice
 
     // Check if API key is configured
     if (!ELEVENLABS_API_KEY) {
