@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pure Dispatch - Voice Diagnostic Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000;
+      color: #fff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #10b981;
+      margin-bottom: 30px;
+    }
+    .test-section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .test-section h2 {
+      color: #10b981;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #10b981;
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #059669;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    .result {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+    .warning { color: #f59e0b; }
+    .info { color: #3b82f6; }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    .status-success {
+      background: #10b981;
+      color: #000;
+    }
+    .status-error {
+      background: #ef4444;
+      color: #fff;
+    }
+    .status-pending {
+      background: #f59e0b;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎤 Pure Dispatch - ElevenLabs Voice Diagnostic</h1>
+    
+    <!-- Test 1: Check API Endpoint -->
+    <div class="test-section">
+      <h2>Test 1: Check if API Endpoint Exists <span id="test1-status"></span></h2>
+      <p>This checks if <code>/api/speak</code> is deployed and accessible.</p>
+      <button onclick="runTest1()">Run Test</button>
+      <div id="test1-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 2: Test Voice Generation -->
+    <div class="test-section">
+      <h2>Test 2: Generate Test Voice <span id="test2-status"></span></h2>
+      <p>This calls the API to generate a test voice and plays it.</p>
+      <button onclick="runTest2()">Run Test</button>
+      <div id="test2-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 3: Check Console Logs -->
+    <div class="test-section">
+      <h2>Test 3: Browser Console Monitor</h2>
+      <p>Check your browser console (F12) while running tests for 🎤 messages.</p>
+      <button onclick="window.open('https://claude.ai', '_blank')">Open Console Instructions</button>
+    </div>
+
+    <!-- Test 4: Test Browser TTS -->
+    <div class="test-section">
+      <h2>Test 4: Browser Text-to-Speech (Fallback)</h2>
+      <p>This tests if browser TTS works (what you're currently hearing).</p>
+      <button onclick="runTest4()">Test Browser Voice</button>
+    </div>
+
+    <!-- Instructions -->
+    <div class="test-section">
+      <h2>📋 What Each Result Means:</h2>
+      <div style="margin-top: 15px; line-height: 1.8;">
+        <p><strong class="success">✅ Test 1 Success (200):</strong> API endpoint exists</p>
+        <p><strong class="error">❌ Test 1 Fail (404):</strong> api/speak.js not deployed or wrong path</p>
+        <p><strong class="error">❌ Test 1 Fail (500):</strong> API deployed but API key not configured</p>
+        <br>
+        <p><strong class="success">✅ Test 2 Success:</strong> ElevenLabs working! You should hear the voice.</p>
+        <p><strong class="error">❌ Test 2 Fail:</strong> API key invalid or ElevenLabs issue</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Test 1: Check if API endpoint exists
+    async function runTest1() {
+      const statusEl = document.getElementById('test1-status');
+      const resultEl = document.getElementById('test1-result');
+      
+      statusEl.innerHTML = '<span class="status-badge status-pending">Testing...</span>';
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = '<p class="info">⏳ Checking /api/speak endpoint...</p>';
+      
+      try {
+        // Try to hit the endpoint with a test request
+        const response = await fetch('/api/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: 'test' })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          statusEl.innerHTML = '<span class="status-badge status-success">✅ PASS</span>';
+          resultEl.innerHTML = `
+            <p class="success">✅ SUCCESS! API endpoint is working!</p>
+            <p class="info">Status: ${response.status}</p>
+            <p class="info">Voice ID: ${data.voiceId || 'N/A'}</p>
+            <p class="info">Model: ${data.model || 'N/A'}</p>
+            <br>
+            <p class="success"><strong>🎉 ElevenLabs API is configured correctly!</strong></p>
+            <p>If you're still hearing browser voice, the issue is in the frontend.</p>
+          `;
+        } else {
+          statusEl.innerHTML = '<span class="status-badge status-error">❌ FAIL</span>';
+          resultEl.innerHTML = `
+            <p class="error">❌ API returned error</p>
+            <p class="warning">Status: ${response.status}</p>
+            <p class="error">Error: ${data.error || 'Unknown error'}</p>
+            <br>
+            <p><strong>Possible causes:</strong></p>
+            <p>- ELEVENLABS_API_KEY not set in Vercel</p>
+            <p>- Invalid API key</p>
+            <p>- ElevenLabs API issue</p>
+            <br>
+            <p><strong>Fix:</strong></p>
+            <p>1. Go to Vercel Dashboard → Settings → Environment Variables</p>
+            <p>2. Check ELEVENLABS_API_KEY exists and is correct</p>
+            <p>3. Redeploy backend</p>
+          `;
+        }
+      } catch (error) {
+        statusEl.innerHTML = '<span class="status-badge status-error">❌ FAIL</span>';
+        resultEl.innerHTML = `
+          <p class="error">❌ ERROR: Could not reach API endpoint</p>
+          <p class="error">${error.message}</p>
+          <br>
+          <p><strong>Possible causes:</strong></p>
+          <p>- api/speak.js not deployed to correct location</p>
+          <p>- Backend not redeployed after adding file</p>
+          <p>- Network error</p>
+          <br>
+          <p><strong>Fix:</strong></p>
+          <p>1. Verify api/speak.js exists at: api/speak.js (NOT api/gps/api/speak.js)</p>
+          <p>2. Redeploy backend in Vercel</p>
+          <p>3. Wait for "Ready" status</p>
+          <p>4. Try again</p>
+        `;
+      }
+    }
+
+    // Test 2: Generate and play test voice
+    async function runTest2() {
+      const statusEl = document.getElementById('test2-status');
+      const resultEl = document.getElementById('test2-result');
+      
+      statusEl.innerHTML = '<span class="status-badge status-pending">Testing...</span>';
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = '<p class="info">⏳ Generating voice with ElevenLabs...</p>';
+      
+      try {
+        console.log('🎤 Test 2: Requesting voice generation...');
+        
+        const testText = 'Hello driver! This is Pure speaking with ElevenLabs voice. If you can hear this clearly in a natural, professional voice, then ElevenLabs is working perfectly!';
+        
+        const response = await fetch('/api/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: testText })
+        });
+
+        console.log('🎤 Test 2: Response status:', response.status);
+
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('🎤 Test 2: Response data:', data.success ? 'Success' : 'Failed');
+
+        if (!data.success || !data.audio) {
+          throw new Error('Invalid response from API');
+        }
+
+        // Play the audio
+        console.log('🎤 Test 2: Creating audio element...');
+        const audio = new Audio(data.audio);
+        audio.volume = 0.85;
+        audio.playbackRate = 0.92;
+        
+        audio.onplay = () => {
+          console.log('🎤 Test 2: Audio playback started');
+          statusEl.innerHTML = '<span class="status-badge status-success">✅ PLAYING</span>';
+          resultEl.innerHTML = `
+            <p class="success">✅ SUCCESS! ElevenLabs voice generated!</p>
+            <p class="success">🎤 <strong>LISTEN NOW - This is the ElevenLabs voice!</strong></p>
+            <br>
+            <p class="info">If this sounds natural and professional (not robotic), ElevenLabs is working!</p>
+            <p class="info">Audio size: ${data.audio.length} characters (base64)</p>
+            <p class="info">Voice ID: ${data.voiceId}</p>
+            <p class="info">Model: ${data.model}</p>
+            <br>
+            <p class="warning"><strong>If you heard the good voice here but not in the app:</strong></p>
+            <p>The issue is with frontend integration. Check browser console for errors.</p>
+          `;
+        };
+        
+        audio.onended = () => {
+          console.log('🎤 Test 2: Audio playback finished');
+          statusEl.innerHTML = '<span class="status-badge status-success">✅ PASS</span>';
+        };
+        
+        audio.onerror = (error) => {
+          console.error('🎤 Test 2: Audio playback error:', error);
+          statusEl.innerHTML = '<span class="status-badge status-error">❌ FAIL</span>';
+          resultEl.innerHTML = `
+            <p class="error">❌ Audio playback error</p>
+            <p class="error">${error.message || 'Unknown error'}</p>
+            <br>
+            <p>Voice was generated but couldn't play. Check browser audio permissions.</p>
+          `;
+        };
+        
+        await audio.play();
+        
+      } catch (error) {
+        console.error('🎤 Test 2: Error:', error);
+        statusEl.innerHTML = '<span class="status-badge status-error">❌ FAIL</span>';
+        resultEl.innerHTML = `
+          <p class="error">❌ ERROR: ${error.message}</p>
+          <br>
+          <p><strong>This means ElevenLabs API is NOT working.</strong></p>
+          <p>Run Test 1 first to diagnose the issue.</p>
+        `;
+      }
+    }
+
+    // Test 4: Browser TTS (what you're currently hearing)
+    function runTest4() {
+      const text = 'This is the browser text-to-speech fallback. It sounds robotic and unnatural. This is what you are currently hearing if ElevenLabs is not working.';
+      
+      if (!window.speechSynthesis) {
+        alert('Browser TTS not available');
+        return;
+      }
+      
+      window.speechSynthesis.cancel();
+      
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        utterance.volume = 0.85;
+        utterance.lang = 'en-US';
+        
+        window.speechSynthesis.speak(utterance);
+        
+        alert('🔊 This is browser TTS (robotic voice)\n\nCompare this to Test 2.\n\nIf they sound the same, ElevenLabs is NOT working.\nIf Test 2 sounds much better, ElevenLabs IS working!');
+      }, 100);
+    }
+
+    // Show instructions on load
+    window.addEventListener('load', () => {
+      console.log('🎤 Voice Diagnostic Page Loaded');
+      console.log('🎤 Run the tests in order:');
+      console.log('🎤 1. Test 1 - Check API endpoint');
+      console.log('🎤 2. Test 2 - Test voice generation');
+      console.log('🎤 3. Compare with Test 4 (browser TTS)');
+    });
+  </script>
+</body>
+</html>
