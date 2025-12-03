@@ -9,6 +9,13 @@ const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname ==
 // =====================================================
 // ELEVENLABS VOICE - PURE'S AI VOICE
 // =====================================================
+//
+// MOBILE COMPATIBILITY NOTE:
+// - Mobile browsers (iOS Safari, Chrome Android) BLOCK autoplay audio
+// - Voice ONLY works when triggered by direct user interaction (button click, form submit)
+// - Auto-voice on login/page load will be BLOCKED on mobile
+// - Voice WILL work when user sends a message (user interaction ✓)
+// =====================================================
 
 // Current audio instance (for stopping/managing playback)
 let currentVoiceAudio = null;
@@ -16,6 +23,10 @@ let currentVoiceAudio = null;
 /**
  * Pure's Voice using ElevenLabs AI
  * Professional, natural-sounding voice for Pure's responses
+ * 
+ * IMPORTANT: On mobile, this only works when called from user interaction
+ * (e.g., after user clicks send button, not on automatic page events)
+ * 
  * @param {string} text - Text to speak
  * @param {function} onStart - Callback when audio starts playing
  * @param {function} onEnd - Callback when audio finishes
@@ -1805,6 +1816,9 @@ export default function PureDispatcher() {
   }, []);
 
   // Welcome voice message when user first arrives at chat
+  // DISABLED: Mobile browsers block autoplay audio
+  // Voice will play when user sends their first message instead
+  /*
   useEffect(() => {
     if (isRegistered && !showDashboard && currentView === 'home' && messages.length === 0 && audioEnabled) {
       const timer = setTimeout(() => {
@@ -1814,6 +1828,7 @@ export default function PureDispatcher() {
       return () => clearTimeout(timer);
     }
   }, [isRegistered, showDashboard, currentView, messages.length, audioEnabled]);
+  */
 
   // GPS Tracking
   useEffect(() => {
@@ -1931,20 +1946,25 @@ export default function PureDispatcher() {
     localStorage.setItem('pureCarrier', JSON.stringify(completeData));
     
     // Welcome voice message
+    // DISABLED: Mobile browsers block autoplay audio
+    // Voice will work when user interacts (sends message, clicks button, etc.)
+    /*
     setTimeout(() => {
       const welcomeText = `Hey there! I'm Pure, your AI dispatcher. Welcome aboard, ${personalData?.name || 'driver'}! I'm here to help you find fuel, check weather, book loads, and handle everything you need on the road. Just ask me anything!`;
       forceSpeak(welcomeText, () => setIsSpeaking(true), () => setIsSpeaking(false));
     }, 1000);
+    */
   };
 
   const handleDashboardNavigate = (view) => {
     setCurrentView(view);
     setShowDashboard(false);
     
-    // Voice greeting when going to chat
+    // Voice greeting when going to chat via button click
+    // This works on mobile because it's triggered by direct user interaction!
     if (view === 'home' && messages.length === 0) {
       setTimeout(() => {
-        const greetingText = `Hey driver! I'm Pure, ready to help. Need fuel? Weather updates? Want to book a load? Just ask me!`;
+        const greetingText = `Hey there, driver! I'm Pure, your AI dispatch assistant. I'm here to help you with loads, fuel, weather, and everything you need on the road. What can I do for you today?`;
         forceSpeak(greetingText, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }, 500);
     }
