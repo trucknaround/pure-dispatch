@@ -4,88 +4,129 @@
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
-// CORS
-res.setHeader('Access-Control-Allow-Credentials', true);
-res.setHeader('Access-Control-Allow-Origin', '*');
-res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-res.setHeader(
-'Access-Control-Allow-Headers',
-'Content-Type, X-Requested-With, Accept'
-);
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
 
-if (req.method === 'OPTIONS') return res.status(200).end();
-if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
 
-try {
-const { text } = req.body;
+  // Only allow POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-if (!text || typeof text !== 'string' || !text.trim()) {
-return res.status(400).json({
-success: false,
-error: 'Text is required and must be a non-empty string'
-});
-}
+  try {
+    const { text } = req.body;
 
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-const VOICE_ID = 'aMSt68OGf4xUZAnLpTU8'; // ← YOUR REAL VOICE ID
+    // Validate input
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Text is required and must be a non-empty string' 
+      });
+    }
 
-if (!ELEVENLABS_API_KEY) {
-return res.status(500).json({
-success: false,
-error: 'ELEVENLABS_API_KEY is missing from environment variables'
-});
-}
+    // Limit text length (ElevenLabs limits)
+    const maxLength = 5000;
+    const textToSpeak = text.length > maxLength 
+      ? text.substring(0, maxLength) + '...' 
+      : text;
 
-// Make ElevenLabs request
-const response = await fetch(
-`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`,
-{
-method: 'POST',
-headers: {
-'xi-api-key': ELEVENLABS_API_KEY,
-'Content-Type': 'application/json',
-'Accept': 'audio/mpeg'
-},
-body: JSON.stringify({
-text: text,
-model_id: 'eleven_multilingual_v2',
-voice_settings: {
-stability: 0.65,
-similarity_boost: 0.75,
-style: 0,
-use_speaker_boost: true
-}
-})
-}
-);
+    // ElevenLabs API configuration
+    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+    const VOICE_ID = '2qfp6zPuviqeCOZIE9RZ'; // Juniper - TTS voice
 
-// If ElevenLabs returned an error, return the details
-if (!response.ok) {
-const errText = await response.text();
-console.error('ElevenLabs API Error:', response.status, errText);
+    // Check if API key is configured
+    if (!ELEVENLABS_API_KEY) {
+      console.error('ELEVENLABS_API_KEY not configured');
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Voice service not configured. Please add ELEVENLABS_API_KEY to environment variables.' 
+      });
+    }
 
-return res.status(response.status).json({
-success: false,
-error: errText || `Voice generation failed: ${response.status}`
-});
-}
+    console.log(`Generating voice for: "${textToSpeak.substring(0, 50)}..."`);
 
-// Convert audio to Base64
-const audioBuffer = await response.buffer();
-const base64 = audioBuffer.toString('base64');
+    // Call ElevenLabs API
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': ELEVENLABS_API_KEY
+        },
+        body: JSON.stringify({
+          text: textToSpeak,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.65,              // ← SMOOTHNESS: Lower = more expressive, Higher = more stable
+            similarity_boost: 0.75,       // ← VOICE CLARITY: Match to original voice
+            style: 0.0,                   // ← STYLE EXAGGERATION: 0 = neutral
+            use_speaker_boost: true       // ← BOOST: Enhances voice quality
+          }
+        })
+      }
+    );
 
-return res.status(200).json({
-success: true,
-audio: `data:audio/mpeg;base64,${base64}`,
-voiceId: VOICE_ID
-});
+    // Check if ElevenLabs API call succeeded
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('ElevenLabs API error:', response.status, errorText);
+      
+      // Return helpful error message
+      if (response.status === 401) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Invalid ElevenLabs API key. Please check your ELEVENLABS_API_KEY.' 
+        });
+      } else if (response.status === 429) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'ElevenLabs API rate limit exceeded. Please try again later.' 
+        });
+      } else {
+        return res.status(500).json({ 
+          success: false, 
+          error: `Voice generation failed: ${response.status}` 
+        });
+      }
+    }
 
-} catch (err) {
-console.error('Server Error:', err);
-return res.status(500).json({
-success: false,
-error: 'Internal server error',
-details: err.message
-});
-}
+    // Get audio buffer
+    const audioBuffer = await response.buffer();
+    
+    // Convert to base64 for JSON response
+    const audioBase64 = audioBuffer.toString('base64');
+    const audioDataUrl = `data:audio/mpeg;base64,${audioBase64}`;
+
+    console.log(`Voice generated successfully (${audioBuffer.length} bytes)`);
+
+    // Return audio data
+    res.status(200).json({
+      success: true,
+      audio: audioDataUrl,
+      text: textToSpeak,
+      voiceId: VOICE_ID,
+      model: 'eleven_monolingual_v1'
+    });
+
+  } catch (error) {
+    console.error('Voice generation error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error during voice generation',
+      details: error.message 
+    });
+  }
 };
