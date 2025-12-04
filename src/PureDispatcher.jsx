@@ -1423,7 +1423,7 @@ function PersonalRegistration({ onComplete, existingData }) {
 // =====================================================
 // CARRIER REGISTRATION COMPONENT (Enhanced with Trailer Sizes)
 // =====================================================
-function CarrierRegistration({ onRegistrationComplete, carrier }) {
+function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = false, onBack }) {
   const equipmentOptions = ['Dry Van', 'Reefer', 'Flatbed', 'Step Deck', 'Box Truck', 'Tanker'];
   const trailerSizeOptions = ['26ft', '48ft', '53ft'];
   const regionOptions = ['Northeast', 'Southeast', 'Midwest', 'Southwest', 'West', 'All Regions'];
@@ -1514,14 +1514,27 @@ function CarrierRegistration({ onRegistrationComplete, carrier }) {
   return (
     <div className="min-h-screen bg-black">
       <div className="border-b border-gray-800">
-        <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-            <Truck className="w-5 h-5 text-black" />
+        <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+              <Truck className="w-5 h-5 text-black" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
+              <p className="text-sm text-gray-400">
+                {isEditing ? 'Edit Profile' : 'Carrier Information - Step 2 of 2'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
-            <p className="text-sm text-gray-400">Carrier Information - Step 2 of 2</p>
-          </div>
+          {isEditing && onBack && (
+            <button
+              onClick={onBack}
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Back to Chat
+            </button>
+          )}
         </div>
       </div>
       <div className="max-w-2xl mx-auto px-6 py-12">
@@ -2120,14 +2133,18 @@ export default function PureDispatcher() {
   };
 
   const handleRegistrationComplete = (carrierData) => {
-    // Merge personal data with carrier data
-    // Keep personal phone separate from company phone
-    const completeData = {
-      ...personalData,
-      personalPhone: personalData.phone, // Save personal phone separately
-      ...carrierData,
-      // carrier phone stays as "phone" field
-    };
+    // If editing profile, merge with existing carrier data
+    // If new registration, merge with personal data
+    const completeData = currentView === 'profile-edit' 
+      ? {
+          ...carrier, // Keep existing carrier data
+          ...carrierData, // Update with new carrier info
+        }
+      : {
+          ...personalData, // New registration: use personal data
+          personalPhone: personalData?.phone || '', // Save personal phone separately
+          ...carrierData, // Add carrier data
+        };
     
     setCarrier(completeData);
     setIsRegistered(true);
@@ -3340,7 +3357,26 @@ export default function PureDispatcher() {
   // PROFILE EDIT VIEW (Carrier Registration)
   // =====================================================
   if (currentView === 'profile-edit') {
-    return <CarrierRegistration onRegistrationComplete={handleRegistrationComplete} carrier={carrier} />;
+    // Ensure carrier object has all required fields with defaults
+    const carrierWithDefaults = {
+      ...carrier,
+      phone: carrier?.phone || '', // Company phone - ensure it exists
+      companyName: carrier?.companyName || '',
+      mcNumber: carrier?.mcNumber || '',
+      dotNumber: carrier?.dotNumber || '',
+      equipmentTypes: carrier?.equipmentTypes || [],
+      trailerSizes: carrier?.trailerSizes || [],
+      operatingRegions: carrier?.operatingRegions || []
+    };
+    
+    return (
+      <CarrierRegistration 
+        onRegistrationComplete={handleRegistrationComplete} 
+        carrier={carrierWithDefaults}
+        isEditing={true}
+        onBack={() => setCurrentView('home')} // Back to chat
+      />
+    );
   }
 
   // =====================================================
