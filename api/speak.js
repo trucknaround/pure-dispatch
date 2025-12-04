@@ -1,8 +1,8 @@
 // Pure Dispatch - ElevenLabs Voice API Endpoint
 // Generates natural AI voice for Pure's responses
-// Uses native fetch (Node 18+)
+// ES Modules format for Vercel
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -69,10 +69,10 @@ module.exports = async (req, res) => {
           text: textToSpeak,
           model_id: 'eleven_turbo_v2',
           voice_settings: {
-            stability: 0.65,              // ← SMOOTHNESS: Lower = more expressive, Higher = more stable
-            similarity_boost: 0.75,       // ← VOICE CLARITY: Match to original voice
-            style: 0.0,                   // ← STYLE EXAGGERATION: 0 = neutral
-            use_speaker_boost: true       // ← BOOST: Enhances voice quality
+            stability: 0.65,              // Smoothness
+            similarity_boost: 0.75,       // Voice clarity
+            style: 0.0,                   // Neutral style
+            use_speaker_boost: true       // Enhanced quality
           }
         })
       }
@@ -118,7 +118,7 @@ module.exports = async (req, res) => {
       audio: audioDataUrl,
       text: textToSpeak,
       voiceId: VOICE_ID,
-      model: 'eleven_monolingual_v1'
+      model: 'eleven_turbo_v2'
     });
 
   } catch (error) {
@@ -129,4 +129,4 @@ module.exports = async (req, res) => {
       details: error.message 
     });
   }
-};
+}
