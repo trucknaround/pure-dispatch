@@ -1878,7 +1878,7 @@ export default function PureDispatcher() {
         setCarrier(carrierData);
         setIsRegistered(true);
         setIsLoggedIn(true);
-        setShowDashboard(false); // Skip dashboard if already registered
+        setShowDashboard(true); // Show dashboard so user can choose Chat or Profile
       } catch (e) {
         localStorage.removeItem('pureCarrier');
       }
@@ -2154,8 +2154,9 @@ export default function PureDispatcher() {
         }
       }
       
-      // Clear localStorage first
-      localStorage.clear(); // Clear everything
+      // DON'T clear localStorage - keep credentials and carrier data
+      // User can log back in without re-registering
+      // localStorage.clear(); // Commented out to preserve registration
       
       // Reset all state
       setIsLoggedIn(false);
@@ -3577,7 +3578,7 @@ export default function PureDispatcher() {
   // HOME / CHAT VIEW
   // =====================================================
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
       {/* Header */}
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6">
