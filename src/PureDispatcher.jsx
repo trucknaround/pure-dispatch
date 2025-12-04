@@ -1867,46 +1867,53 @@ export default function PureDispatcher() {
 
   // Check for existing session
   useEffect(() => {
-    const savedCarrier = localStorage.getItem('pureCarrier');
-    const savedDocs = localStorage.getItem('pureDocuments');
-    const savedHistory = localStorage.getItem('pureLoadHistory');
-    const savedFavorites = localStorage.getItem('pureFavoriteLoads');
+    // Check if there's an ACTIVE session (not just saved data)
+    const activeSession = localStorage.getItem('pureActiveSession');
     
-    if (savedCarrier) {
-      try {
-        const carrierData = JSON.parse(savedCarrier);
-        setCarrier(carrierData);
-        setIsRegistered(true);
-        setIsLoggedIn(true);
-        setShowDashboard(true); // Show dashboard so user can choose Chat or Profile
-      } catch (e) {
-        localStorage.removeItem('pureCarrier');
+    if (activeSession === 'true') {
+      // User has active session - auto-login
+      const savedCarrier = localStorage.getItem('pureCarrier');
+      const savedDocs = localStorage.getItem('pureDocuments');
+      const savedHistory = localStorage.getItem('pureLoadHistory');
+      const savedFavorites = localStorage.getItem('pureFavoriteLoads');
+      
+      if (savedCarrier) {
+        try {
+          const carrierData = JSON.parse(savedCarrier);
+          setCarrier(carrierData);
+          setIsRegistered(true);
+          setIsLoggedIn(true);
+          setShowDashboard(true); // Show dashboard so user can choose Chat or Profile
+        } catch (e) {
+          localStorage.removeItem('pureCarrier');
+        }
       }
-    }
-    
-    if (savedDocs) {
-      try {
-        setDocuments(JSON.parse(savedDocs));
-      } catch (e) {
-        localStorage.removeItem('pureDocuments');
+      
+      if (savedDocs) {
+        try {
+          setDocuments(JSON.parse(savedDocs));
+        } catch (e) {
+          localStorage.removeItem('pureDocuments');
+        }
       }
-    }
 
-    if (savedHistory) {
-      try {
-        setLoadHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        localStorage.removeItem('pureLoadHistory');
+      if (savedHistory) {
+        try {
+          setLoadHistory(JSON.parse(savedHistory));
+        } catch (e) {
+          localStorage.removeItem('pureLoadHistory');
+        }
       }
-    }
 
-    if (savedFavorites) {
-      try {
-        setFavoriteLoads(JSON.parse(savedFavorites));
-      } catch (e) {
-        localStorage.removeItem('pureFavoriteLoads');
+      if (savedFavorites) {
+        try {
+          setFavoriteLoads(JSON.parse(savedFavorites));
+        } catch (e) {
+          localStorage.removeItem('pureFavoriteLoads');
+        }
       }
     }
+    // If no active session, user sees login page (even if data exists in localStorage)
 
     // Check backend health
     fetch(`${BACKEND_URL}/health`)
@@ -2075,6 +2082,7 @@ export default function PureDispatcher() {
       // New user - start registration flow
       setIsLoggedIn(true);
       setRegistrationStep('personal');
+      localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
     } else if (data) {
       // Existing user - load their data
       setCarrier(data);
@@ -2082,10 +2090,12 @@ export default function PureDispatcher() {
       setIsLoggedIn(true);
       setShowDashboard(true);
       setRegistrationStep('none');
+      localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
     } else {
       // Fallback - start registration
       setIsLoggedIn(true);
       setRegistrationStep('personal');
+      localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
     }
   };
 
@@ -2112,6 +2122,7 @@ export default function PureDispatcher() {
     setShowDashboard(true);
     setRegistrationStep('none');
     localStorage.setItem('pureCarrier', JSON.stringify(completeData));
+    localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
     
     // Welcome voice message
     // DISABLED: Mobile browsers block autoplay audio
@@ -2157,6 +2168,9 @@ export default function PureDispatcher() {
       // DON'T clear localStorage - keep credentials and carrier data
       // User can log back in without re-registering
       // localStorage.clear(); // Commented out to preserve registration
+      
+      // Clear active session flag so user sees login page on next visit
+      localStorage.removeItem('pureActiveSession');
       
       // Reset all state
       setIsLoggedIn(false);
