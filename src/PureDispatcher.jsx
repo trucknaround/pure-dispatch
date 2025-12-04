@@ -1565,7 +1565,7 @@ function CarrierRegistration({ onRegistrationComplete, carrier }) {
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Company Number *</label>
                 <input type="tel" value={formData.phone} onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500" placeholder="(555) 123-4567" />
               </div>
             </div>
@@ -2121,17 +2121,27 @@ export default function PureDispatcher() {
 
   const handleRegistrationComplete = (carrierData) => {
     // Merge personal data with carrier data
+    // Keep personal phone separate from company phone
     const completeData = {
       ...personalData,
-      ...carrierData
+      personalPhone: personalData.phone, // Save personal phone separately
+      ...carrierData,
+      // carrier phone stays as "phone" field
     };
     
     setCarrier(completeData);
     setIsRegistered(true);
-    setShowDashboard(true);
-    setRegistrationStep('none');
     localStorage.setItem('pureCarrier', JSON.stringify(completeData));
     localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
+    
+    // If editing profile, go back to profile view
+    // Otherwise, show dashboard (new registration)
+    if (currentView === 'profile-edit') {
+      setCurrentView('profile');
+    } else {
+      setShowDashboard(true);
+      setRegistrationStep('none');
+    }
     
     // Welcome voice message
     // DISABLED: Mobile browsers block autoplay audio
@@ -3203,6 +3213,133 @@ export default function PureDispatcher() {
   // PROFILE VIEW
   // =====================================================
   if (currentView === 'profile') {
+    return (
+      <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'}`}>
+        {/* Header */}
+        <div className={`border-b ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-gray-800 bg-black'}`}>
+          <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 ${theme === 'light' ? 'bg-green-100' : 'bg-white'} rounded-full flex items-center justify-center`}>
+                <User className={`w-5 h-5 ${theme === 'light' ? 'text-green-600' : 'text-black'}`} />
+              </div>
+              <div>
+                <h1 className={`text-2xl font-light ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Profile</h1>
+                <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>Your account information</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setCurrentView('home')}
+              className={`px-4 py-2 rounded-lg ${theme === 'light' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'} transition-colors flex items-center gap-2`}
+            >
+              <Home className="w-4 h-4" />
+              Back to Home
+            </button>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Personal Information */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
+              <h2 className={`text-xl font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-6 flex items-center gap-2`}>
+                <User className="w-5 h-5 text-green-400" />
+                Personal Information
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Full Name</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Email Address</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.personalPhone || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Address</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.address || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>City</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.city || 'N/A'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>State</label>
+                    <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.state || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>ZIP Code</label>
+                    <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.zip || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Company Information */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
+              <h2 className={`text-xl font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-6 flex items-center gap-2`}>
+                <Building className="w-5 h-5 text-green-400" />
+                Company Information
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Name</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.companyName || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.phone || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>DOT Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dotNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>MC Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mcNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>EIN</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.ein || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Number of Trucks</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.numberOfTrucks || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Equipment Types</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.equipmentTypes?.join(', ') || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Edit Profile Button */}
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => {
+                // Navigate to carrier registration to edit
+                setCurrentView('profile-edit');
+              }}
+              className={`px-6 py-3 rounded-xl ${theme === 'light' ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-black hover:bg-green-400'} transition-colors font-medium flex items-center gap-2`}
+            >
+              <User className="w-4 h-4" />
+              Edit Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // PROFILE EDIT VIEW (Carrier Registration)
+  // =====================================================
+  if (currentView === 'profile-edit') {
     return <CarrierRegistration onRegistrationComplete={handleRegistrationComplete} carrier={carrier} />;
   }
 
