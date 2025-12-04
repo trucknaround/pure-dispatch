@@ -68,7 +68,7 @@ module.exports = async (req, res) => {
         },
         body: JSON.stringify({
           text: textToSpeak,
-          model_id: 'eleven_multilingual_v2',
+          model_id: 'eleven_turbo_v2_5',
           voice_settings: {
             stability: 0.65,              // ← SMOOTHNESS: Lower = more expressive, Higher = more stable
             similarity_boost: 0.75,       // ← VOICE CLARITY: Match to original voice
@@ -118,7 +118,7 @@ module.exports = async (req, res) => {
       audio: audioDataUrl,
       text: textToSpeak,
       voiceId: VOICE_ID,
-      model: 'eleven_monolingual_v2'
+      model: 'eleven_monolingual_v1'
     });
 
   } catch (error) {
