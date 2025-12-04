@@ -1,38 +1,22 @@
 // Pure Dispatch - ElevenLabs Voice API Endpoint
 // Generates natural AI voice for Pure's responses
+// Next.js App Router format
 
-const fetch = require('node-fetch');
+import { NextResponse } from 'next/server';
 
-module.exports = async (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  // Only allow POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(request) {
   try {
-    const { text } = req.body;
+    const { text } = await request.json();
 
     // Validate input
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Text is required and must be a non-empty string' 
-      });
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Text is required and must be a non-empty string' 
+        },
+        { status: 400 }
+      );
     }
 
     // Limit text length (ElevenLabs limits)
@@ -43,15 +27,18 @@ module.exports = async (req, res) => {
 
     // ElevenLabs API configuration
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-    const VOICE_ID = '2qfp6zPuviqeCOZIE9RZ'; // Juniper - TTS voice
+    const VOICE_ID = '2qfp6zPuviqeCOZIE9RZ'; // Trinity - Pure's voice
 
     // Check if API key is configured
     if (!ELEVENLABS_API_KEY) {
       console.error('ELEVENLABS_API_KEY not configured');
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Voice service not configured. Please add ELEVENLABS_API_KEY to environment variables.' 
-      });
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Voice service not configured. Please add ELEVENLABS_API_KEY to environment variables.' 
+        },
+        { status: 500 }
+      );
     }
 
     console.log(`Generating voice for: "${textToSpeak.substring(0, 50)}..."`);
@@ -70,10 +57,10 @@ module.exports = async (req, res) => {
           text: textToSpeak,
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
-            stability: 0.65,              // ← SMOOTHNESS: Lower = more expressive, Higher = more stable
-            similarity_boost: 0.75,       // ← VOICE CLARITY: Match to original voice
-            style: 0.0,                   // ← STYLE EXAGGERATION: 0 = neutral
-            use_speaker_boost: true       // ← BOOST: Enhances voice quality
+            stability: 0.65,              // Smoothness
+            similarity_boost: 0.75,       // Voice clarity
+            style: 0.0,                   // Neutral style
+            use_speaker_boost: true       // Enhanced quality
           }
         })
       }
@@ -86,25 +73,35 @@ module.exports = async (req, res) => {
       
       // Return helpful error message
       if (response.status === 401) {
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Invalid ElevenLabs API key. Please check your ELEVENLABS_API_KEY.' 
-        });
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Invalid ElevenLabs API key. Please check your ELEVENLABS_API_KEY.' 
+          },
+          { status: 500 }
+        );
       } else if (response.status === 429) {
-        return res.status(500).json({ 
-          success: false, 
-          error: 'ElevenLabs API rate limit exceeded. Please try again later.' 
-        });
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'ElevenLabs API rate limit exceeded. Please try again later.' 
+          },
+          { status: 500 }
+        );
       } else {
-        return res.status(500).json({ 
-          success: false, 
-          error: `Voice generation failed: ${response.status}` 
-        });
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `Voice generation failed: ${response.status}` 
+          },
+          { status: 500 }
+        );
       }
     }
 
     // Get audio buffer
-    const audioBuffer = await response.buffer();
+    const audioArrayBuffer = await response.arrayBuffer();
+    const audioBuffer = Buffer.from(audioArrayBuffer);
     
     // Convert to base64 for JSON response
     const audioBase64 = audioBuffer.toString('base64');
@@ -113,20 +110,35 @@ module.exports = async (req, res) => {
     console.log(`Voice generated successfully (${audioBuffer.length} bytes)`);
 
     // Return audio data
-    res.status(200).json({
+    return NextResponse.json({
       success: true,
       audio: audioDataUrl,
       text: textToSpeak,
       voiceId: VOICE_ID,
-      model: 'eleven_monolingual_v1'
+      model: 'eleven_multilingual_v2'
     });
 
   } catch (error) {
     console.error('Voice generation error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Internal server error during voice generation',
-      details: error.message 
-    });
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Internal server error during voice generation',
+        details: error.message 
+      },
+      { status: 500 }
+    );
   }
-};
+}
+
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS(request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
