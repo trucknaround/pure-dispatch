@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff } from 'lucide-react';
+import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell } from 'lucide-react';
 
 // PURE CALLS - Message Tracking & Auto-Calling System
 // NOTE: These files need to be uploaded to your project:
@@ -1739,6 +1739,15 @@ export default function PureDispatcher() {
   const gpsWatchIdRef = useRef(null);
   const gpsDebounceRef = useRef(null);
   const lastLocationRef = useRef(null);
+
+  // NEW: Theme and Settings state
+  const [theme, setTheme] = useState(() => localStorage.getItem('pureTheme') || 'dark');
+  const [voiceSpeed, setVoiceSpeed] = useState(() => parseFloat(localStorage.getItem('pureVoiceSpeed')) || 0.92);
+  const [voiceVolume, setVoiceVolume] = useState(() => parseFloat(localStorage.getItem('pureVoiceVolume')) || 0.85);
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const saved = localStorage.getItem('pureNotifications');
+    return saved ? JSON.parse(saved) : { loadAlerts: true, documentReminders: true, messageSounds: true };
+  });
 
   // PURE CALLS - Message Tracking & Auto-Calling
   // NOTE: These will work once messageTracking.js is uploaded
@@ -3589,6 +3598,473 @@ export default function PureDispatcher() {
   }
 
   // =====================================================
+  // EARNINGS ANALYTICS VIEW
+  // =====================================================
+  if (currentView === 'earnings') {
+    return (
+      <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'} flex flex-col`}>
+        {/* Header */}
+        <div className={`border-b ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-gray-800 bg-black'}`}>
+          <div className="max-w-4xl mx-auto px-6 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 ${theme === 'light' ? 'bg-green-100' : 'bg-white'} rounded-full flex items-center justify-center`}>
+                  <DollarSign className={`w-5 h-5 ${theme === 'light' ? 'text-green-600' : 'text-black'}`} />
+                </div>
+                <div>
+                  <h1 className={`text-2xl font-light ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Earnings Analytics</h1>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>{carrier?.companyName || 'Carrier'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCurrentView('home')}
+                className={`px-4 py-2 rounded-lg ${theme === 'light' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'} transition-colors`}
+              >
+                Back to Chat
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 max-w-4xl mx-auto w-full">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* This Week */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl p-6 border`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>This Week</span>
+                <div className="w-8 h-8 bg-green-500/10 rounded-full flex items-center justify-center">
+                  <DollarSign className="w-4 h-4 text-green-400" />
+                </div>
+              </div>
+              <p className={`text-3xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-1`}>
+                ${(loadHistory.filter(l => {
+                  const date = new Date(l.deliveryDate);
+                  const weekAgo = new Date();
+                  weekAgo.setDate(weekAgo.getDate() - 7);
+                  return date >= weekAgo;
+                }).reduce((sum, l) => sum + l.rate, 0)).toLocaleString()}
+              </p>
+              <p className="text-sm text-green-400">
+                +{loadHistory.filter(l => {
+                  const date = new Date(l.deliveryDate);
+                  const weekAgo = new Date();
+                  weekAgo.setDate(weekAgo.getDate() - 7);
+                  return date >= weekAgo;
+                }).length} loads
+              </p>
+            </div>
+
+            {/* This Month */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl p-6 border`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>This Month</span>
+                <div className="w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-blue-400" />
+                </div>
+              </div>
+              <p className={`text-3xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-1`}>
+                ${(loadHistory.filter(l => {
+                  const date = new Date(l.deliveryDate);
+                  const monthAgo = new Date();
+                  monthAgo.setMonth(monthAgo.getMonth() - 1);
+                  return date >= monthAgo;
+                }).reduce((sum, l) => sum + l.rate, 0)).toLocaleString()}
+              </p>
+              <p className="text-sm text-blue-400">
+                +{loadHistory.filter(l => {
+                  const date = new Date(l.deliveryDate);
+                  const monthAgo = new Date();
+                  monthAgo.setMonth(monthAgo.getMonth() - 1);
+                  return date >= monthAgo;
+                }).length} loads
+              </p>
+            </div>
+
+            {/* All Time */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl p-6 border`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>All Time</span>
+                <div className="w-8 h-8 bg-purple-500/10 rounded-full flex items-center justify-center">
+                  <Package className="w-4 h-4 text-purple-400" />
+                </div>
+              </div>
+              <p className={`text-3xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-1`}>
+                ${(loadHistory.reduce((sum, l) => sum + l.rate, 0)).toLocaleString()}
+              </p>
+              <p className="text-sm text-purple-400">
+                {loadHistory.length} total loads
+              </p>
+            </div>
+          </div>
+
+          {/* Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Average Per Load */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl p-6 border`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-4`}>Average Per Load</h3>
+              <p className={`text-4xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+                ${loadHistory.length > 0 ? Math.round(loadHistory.reduce((sum, l) => sum + l.rate, 0) / loadHistory.length).toLocaleString() : '0'}
+              </p>
+            </div>
+
+            {/* Miles Driven */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl p-6 border`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-4`}>Total Miles</h3>
+              <p className={`text-4xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+                {(loadHistory.reduce((sum, l) => sum + (l.distance || 0), 0)).toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Recent Loads */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border overflow-hidden`}>
+            <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Recent Loads</h3>
+            </div>
+            <div className={`divide-y ${theme === 'light' ? 'divide-gray-200' : 'divide-gray-800'} max-h-96 overflow-y-auto`}>
+              {loadHistory.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Package className={`w-12 h-12 ${theme === 'light' ? 'text-gray-300' : 'text-gray-700'} mx-auto mb-3`} />
+                  <p className={theme === 'light' ? 'text-gray-600' : 'text-gray-400'}>No loads completed yet</p>
+                </div>
+              ) : (
+                loadHistory.slice().reverse().slice(0, 10).map((load, index) => (
+                  <div key={index} className={`p-4 ${theme === 'light' ? 'hover:bg-gray-50' : 'hover:bg-gray-800/50'} transition-colors`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1">
+                        <p className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+                          {load.origin} → {load.destination}
+                        </p>
+                        <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
+                          {new Date(load.deliveryDate).toLocaleDateString()} • {load.distance || 'N/A'} miles
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-lg font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>${load.rate.toLocaleString()}</p>
+                        <p className={`text-xs ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
+                          ${load.distance ? (load.rate / load.distance).toFixed(2) : 'N/A'}/mi
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {loadHistory.length === 0 && (
+            <div className={`${theme === 'light' ? 'bg-green-50 border-green-200' : 'bg-green-500/10 border-green-500/20'} border rounded-xl p-4 mt-4`}>
+              <div className="flex gap-3">
+                <AlertCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <div className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
+                  <p className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-1`}>Start tracking your earnings!</p>
+                  <p className={theme === 'light' ? 'text-gray-600' : 'text-gray-400'}>Complete loads to see your earnings analytics here. Pure will automatically track all your deliveries.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // SETTINGS VIEW
+  // =====================================================
+  if (currentView === 'settings') {
+    return (
+      <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'} flex flex-col`}>
+        {/* Header */}
+        <div className={`border-b ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-gray-800 bg-black'}`}>
+          <div className="max-w-4xl mx-auto px-6 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 ${theme === 'light' ? 'bg-green-100' : 'bg-white'} rounded-full flex items-center justify-center`}>
+                  <Settings className={`w-5 h-5 ${theme === 'light' ? 'text-green-600' : 'text-black'}`} />
+                </div>
+                <div>
+                  <h1 className={`text-2xl font-light ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Settings</h1>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>Customize your experience</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCurrentView('home')}
+                className={`px-4 py-2 rounded-lg ${theme === 'light' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'} transition-colors`}
+              >
+                Back to Chat
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 max-w-4xl mx-auto w-full space-y-6">
+          
+          {/* Appearance */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
+            <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} flex items-center gap-2`}>
+                <Globe className="w-5 h-5 text-green-400" />
+                Appearance
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Theme Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Theme</p>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
+                    {theme === 'light' ? 'Light mode' : 'Dark mode'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newTheme = theme === 'dark' ? 'light' : 'dark';
+                    setTheme(newTheme);
+                    localStorage.setItem('pureTheme', newTheme);
+                  }}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    theme === 'dark' ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      theme === 'dark' ? 'transform translate-x-6' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Voice Settings */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
+            <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} flex items-center gap-2`}>
+                <Volume2 className="w-5 h-5 text-green-400" />
+                Voice & Audio
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Voice Speed */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Voice Speed</label>
+                  <span className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>{(voiceSpeed * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.7"
+                  max="1.3"
+                  step="0.1"
+                  value={voiceSpeed}
+                  onChange={(e) => {
+                    const newSpeed = parseFloat(e.target.value);
+                    setVoiceSpeed(newSpeed);
+                    localStorage.setItem('pureVoiceSpeed', newSpeed.toString());
+                  }}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+
+              {/* Voice Volume */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Voice Volume</label>
+                  <span className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>{(voiceVolume * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.3"
+                  max="1.0"
+                  step="0.1"
+                  value={voiceVolume}
+                  onChange={(e) => {
+                    const newVolume = parseFloat(e.target.value);
+                    setVoiceVolume(newVolume);
+                    localStorage.setItem('pureVoiceVolume', newVolume.toString());
+                  }}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Notifications */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
+            <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} flex items-center gap-2`}>
+                <Bell className="w-5 h-5 text-green-400" />
+                Notifications
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Load Alerts */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Load Alerts</p>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>Notify when new loads match your preferences</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newValue = !notificationSettings.loadAlerts;
+                    setNotificationSettings(prev => ({ ...prev, loadAlerts: newValue }));
+                    localStorage.setItem('pureNotifications', JSON.stringify({ ...notificationSettings, loadAlerts: newValue }));
+                  }}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    notificationSettings.loadAlerts ? 'bg-green-500' : 'bg-gray-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      notificationSettings.loadAlerts ? 'transform translate-x-6' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Document Reminders */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Document Reminders</p>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>Remind when documents are expiring</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newValue = !notificationSettings.documentReminders;
+                    setNotificationSettings(prev => ({ ...prev, documentReminders: newValue }));
+                    localStorage.setItem('pureNotifications', JSON.stringify({ ...notificationSettings, documentReminders: newValue }));
+                  }}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    notificationSettings.documentReminders ? 'bg-green-500' : 'bg-gray-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      notificationSettings.documentReminders ? 'transform translate-x-6' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Message Sounds */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Message Sounds</p>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>Play sound when Pure responds</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newValue = !notificationSettings.messageSounds;
+                    setNotificationSettings(prev => ({ ...prev, messageSounds: newValue }));
+                    localStorage.setItem('pureNotifications', JSON.stringify({ ...notificationSettings, messageSounds: newValue }));
+                  }}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    notificationSettings.messageSounds ? 'bg-green-500' : 'bg-gray-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      notificationSettings.messageSounds ? 'transform translate-x-6' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Privacy & Security */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
+            <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} flex items-center gap-2`}>
+                <Lock className="w-5 h-5 text-green-400" />
+                Privacy & Security
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Clear Chat History */}
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all chat messages? This cannot be undone.')) {
+                    setMessages([]);
+                  }
+                }}
+                className={`w-full px-4 py-3 rounded-lg ${theme === 'light' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'} transition-colors text-left flex items-center justify-between`}
+              >
+                <span>Clear Chat History</span>
+                <Trash2 className="w-4 h-4" />
+              </button>
+
+              {/* Clear Load History */}
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all load history? This cannot be undone.')) {
+                    setLoadHistory([]);
+                    localStorage.removeItem('pureLoadHistory');
+                  }
+                }}
+                className={`w-full px-4 py-3 rounded-lg ${theme === 'light' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'} transition-colors text-left flex items-center justify-between`}
+              >
+                <span>Clear Load History</span>
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Account Info */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
+            <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} flex items-center gap-2`}>
+                <User className="w-5 h-5 text-green-400" />
+                Account Information
+              </h3>
+            </div>
+            <div className="p-6 space-y-3">
+              <div className="flex justify-between">
+                <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-400'}>Name</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{carrier?.name || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-400'}>Email</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{carrier?.email || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-400'}>Company</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{carrier?.companyName || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-400'}>DOT Number</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{carrier?.dotNumber || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-400'}>MC Number</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{carrier?.mcNumber || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* About */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border p-6`}>
+            <div className="text-center">
+              <div className={`w-16 h-16 ${theme === 'light' ? 'bg-green-100' : 'bg-white'} rounded-full flex items-center justify-center mx-auto mb-3`}>
+                <Truck className={`w-8 h-8 ${theme === 'light' ? 'text-green-600' : 'text-black'}`} />
+              </div>
+              <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-1`}>Pure Dispatch</h3>
+              <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} mb-4`}>Version 1.0.0</p>
+              <p className={`text-xs ${theme === 'light' ? 'text-gray-500' : 'text-gray-500'}`}>
+                © 2025 Pure Dispatch. All rights reserved.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
   // HOME / CHAT VIEW
   // =====================================================
   return (
@@ -3717,6 +4193,20 @@ export default function PureDispatcher() {
             >
               <FileText className="w-4 h-4" />
               Documents
+            </button>
+            <button
+              onClick={() => setCurrentView('earnings')}
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <DollarSign className="w-4 h-4" />
+              Earnings
+            </button>
+            <button
+              onClick={() => setCurrentView('settings')}
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
             </button>
           </div>
         </div>
