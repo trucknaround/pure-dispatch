@@ -1,5 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe } from 'lucide-react';
+import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff } from 'lucide-react';
+
+// PURE CALLS - Message Tracking & Auto-Calling System
+// NOTE: These files need to be uploaded to your project:
+// - src/utils/messageTracking.js (upload message-tracking-system.js here)
+// - src/components/CallSettingsPanel.jsx (already created)
+// Uncomment these imports after uploading the files:
+/*
+import { 
+  MessageTracker, 
+  CallSettings, 
+  MESSAGE_PRIORITY,
+  createTrackedMessage,
+  formatCallMessage
+} from './utils/messageTracking';
+import CallSettingsPanel from './components/CallSettingsPanel';
+*/
 
 // Backend URL
 const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -1724,9 +1740,130 @@ export default function PureDispatcher() {
   const gpsDebounceRef = useRef(null);
   const lastLocationRef = useRef(null);
 
+  // PURE CALLS - Message Tracking & Auto-Calling
+  // NOTE: These will work once messageTracking.js is uploaded
+  const [messageTracker] = useState(() => {
+    // Placeholder - will be replaced with: new MessageTracker()
+    return {
+      start: () => console.log('📞 Message tracker placeholder'),
+      stop: () => {},
+      trackMessage: () => {},
+      markAsRead: () => {},
+      markAsResponded: () => {},
+      markCallTriggered: () => {},
+      loadFromStorage: () => {},
+      cleanOldMessages: () => {}
+    };
+  });
+  const [callSettings] = useState(() => {
+    // Placeholder - will be replaced with: new CallSettings()
+    return {
+      canMakeCall: () => false,
+      recordCall: () => {},
+      getSettings: () => ({ enabled: false }),
+      updateSettings: () => {},
+      isQuietHours: () => false
+    };
+  });
+  const [lastActivityTime, setLastActivityTime] = useState(Date.now());
+
   const messagesEndRef = useRef(null);
   const profileMenuRef = useRef(null);
   const recognitionRef = useRef(null);
+
+  // =====================================================
+  // PURE CALLS - HELPER FUNCTIONS
+  // =====================================================
+
+  /**
+   * Update user activity timestamp
+   * Called whenever user interacts with the app
+   */
+  const updateActivityTimestamp = () => {
+    const now = Date.now();
+    setLastActivityTime(now);
+    localStorage.setItem('lastActivityTime', now.toString());
+  };
+
+  /**
+   * Check if user is currently active in the app
+   * Returns true if user was active within last 2 minutes
+   */
+  const isUserActiveInApp = () => {
+    const storedTime = localStorage.getItem('lastActivityTime');
+    if (!storedTime) return false;
+    
+    const timeSinceActivity = Date.now() - parseInt(storedTime);
+    return timeSinceActivity < 2 * 60 * 1000; // Active if < 2 minutes
+  };
+
+  /**
+   * Handle call trigger - Called when message tracking determines a call is needed
+   * This is the main function that initiates calls to drivers
+   */
+  const handleCallTrigger = async (message) => {
+    console.log('📞 Call trigger received for message:', message.id);
+    
+    // Check if calls are allowed based on user settings
+    if (!callSettings.canMakeCall(message.priority)) {
+      console.log('📞 Call blocked by user settings');
+      return;
+    }
+
+    // Verify we have driver's phone number
+    if (!personalData?.phone) {
+      console.error('📞 No phone number available for driver');
+      return;
+    }
+
+    try {
+      console.log('📞 Initiating call to:', personalData.phone);
+      
+      // Format the message for calling
+      // NOTE: formatCallMessage is imported from messageTracking.js
+      // For now, we'll format it manually
+      const callText = `Hey driver, this is Pure calling from your dispatch app. ${message.text}`;
+      
+      // Make the call via Twilio API
+      const response = await fetch(`${BACKEND_URL}/api/twilio/call`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          driverPhone: personalData.phone,
+          driverName: personalData.name || 'driver',
+          messageText: callText,
+          messageId: message.id,
+          priority: message.priority
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Mark that call was triggered
+        messageTracker.markCallTriggered(message.id, data.callSid);
+        callSettings.recordCall();
+        
+        console.log('📞 Call initiated successfully:', data.callSid);
+        console.log('📞 Status:', data.status);
+        
+        // Optional: Show notification to user
+        // Could add a toast notification here
+        
+      } else {
+        console.error('📞 Call failed:', data.error);
+      }
+
+    } catch (error) {
+      console.error('📞 Call initiation error:', error);
+    }
+  };
+
+  // =====================================================
+  // END PURE CALLS FUNCTIONS
+  // =====================================================
 
   // Check for existing session
   useEffect(() => {
@@ -1777,6 +1914,37 @@ export default function PureDispatcher() {
       .then(() => setBackendStatus('connected'))
       .catch(() => setBackendStatus('mock'));
   }, []);
+
+  // PURE CALLS - Initialize message tracker
+  // Starts tracking messages and triggers calls when needed
+  useEffect(() => {
+    console.log('📞 Initializing Pure Calls system');
+    
+    // Start the message tracker
+    messageTracker.start(handleCallTrigger, isUserActiveInApp);
+    
+    // Load saved tracking data
+    messageTracker.loadFromStorage();
+    
+    // Clean old messages daily
+    const cleanupInterval = setInterval(() => {
+      messageTracker.cleanOldMessages();
+    }, 24 * 60 * 60 * 1000); // Once per day
+    
+    // Update activity timestamp periodically while app is open
+    const activityInterval = setInterval(() => {
+      if (document.hasFocus()) {
+        updateActivityTimestamp();
+      }
+    }, 30000); // Every 30 seconds
+    
+    // Cleanup on unmount
+    return () => {
+      messageTracker.stop();
+      clearInterval(cleanupInterval);
+      clearInterval(activityInterval);
+    };
+  }, []); // Only run once on mount
 
   // Save documents whenever they change
   useEffect(() => {
@@ -2282,6 +2450,9 @@ export default function PureDispatcher() {
   const handleSend = async () => {
     if (!inputText.trim() || isTyping) return;
 
+    // Update activity timestamp - user is actively using app
+    updateActivityTimestamp();
+
     const userMessage = {
       from: 'user',
       text: inputText,
@@ -2290,6 +2461,14 @@ export default function PureDispatcher() {
     setMessages(prev => [...prev, userMessage]);
     setInputText("");
     setIsTyping(true);
+
+    // Mark previous message as responded (user is engaging)
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.from === 'pure' && lastMessage.id) {
+        messageTracker.markAsResponded(lastMessage.id);
+      }
+    }
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/pure/chat`, {
@@ -2308,6 +2487,47 @@ export default function PureDispatcher() {
         meta: data.meta || null
       };
       setMessages(prev => [...prev, pureMessage]);
+
+      // PURE CALLS - Track this message for potential calling
+      // Determine priority based on content/metadata
+      let priority = 'MEDIUM'; // Default priority
+      
+      // HIGH priority keywords (will trigger call after 5 min)
+      const highPriorityKeywords = ['urgent', 'immediately', 'asap', 'hot load', 'expires in', 'time sensitive'];
+      const isHighPriority = highPriorityKeywords.some(keyword => 
+        data.response.toLowerCase().includes(keyword)
+      );
+      
+      if (isHighPriority || data.meta?.urgent === true) {
+        priority = 'HIGH';
+      }
+      
+      // LOW priority (never calls) - tips, fun facts, general info
+      const lowPriorityKeywords = ['tip:', 'did you know', 'fun fact', 'by the way'];
+      const isLowPriority = lowPriorityKeywords.some(keyword => 
+        data.response.toLowerCase().includes(keyword)
+      );
+      
+      if (isLowPriority) {
+        priority = 'LOW';
+      }
+      
+      // Create tracked message
+      // NOTE: This placeholder will be replaced with: createTrackedMessage(data.response, MESSAGE_PRIORITY[priority], {...})
+      const trackedMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      messageTracker.trackMessage({
+        id: trackedMessageId,
+        text: data.response,
+        priority: priority,
+        from: 'pure',
+        sentAt: Date.now(),
+        readAt: null,
+        respondedAt: null,
+        callTriggered: false,
+        metadata: { mood: data.mood, skill: data.skill }
+      });
+      
+      console.log(`📊 Tracking message with ${priority} priority:`, trackedMessageId);
 
       if (audioEnabled) {
         await forceSpeak(data.response, () => setIsSpeaking(true), () => setIsSpeaking(false));
@@ -2963,6 +3183,155 @@ export default function PureDispatcher() {
   }
 
   // =====================================================
+  // CALL SETTINGS VIEW - Pure Calls Configuration
+  // =====================================================
+  if (currentView === 'callSettings') {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="border-b border-gray-800">
+          <div className="max-w-4xl mx-auto px-6 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                  <Truck className="w-5 h-5 text-black" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-light text-white">Pure Calls</h1>
+                  <p className="text-sm text-gray-400">Configure AI calling features</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCurrentView('home')}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Back to Chat
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          {/* INFO BANNER */}
+          <div className="mb-6 bg-gradient-to-r from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-xl p-5">
+            <div className="flex items-start gap-3">
+              <PhoneCall className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-white font-medium mb-2">What is Pure Calls?</h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Pure Calls is an advanced feature that automatically calls you when you don't respond to 
+                  important messages. Perfect for when you're driving and can't check your phone - Pure will 
+                  call you with urgent load opportunities, broker requests, and critical alerts.
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Works with any phone</span>
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Natural AI voice</span>
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Smart call timing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PLACEHOLDER FOR CALL SETTINGS PANEL */}
+          {/* NOTE: Uncomment this when CallSettingsPanel.jsx is uploaded */}
+          {/*
+          <CallSettingsPanel
+            callSettings={callSettings}
+            onUpdate={(settings) => {
+              console.log('Settings updated:', settings);
+              updateActivityTimestamp();
+            }}
+          />
+          */}
+
+          {/* TEMPORARY PLACEHOLDER UI */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h3 className="text-white text-lg font-medium mb-4">Call Settings</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Enable Calls</p>
+                  <p className="text-sm text-gray-400">Allow Pure to call you for urgent messages</p>
+                </div>
+                <div className="px-3 py-1 bg-yellow-900/30 text-yellow-400 text-sm rounded">
+                  Coming Soon
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Quiet Hours</p>
+                  <p className="text-sm text-gray-400">No calls during sleep time</p>
+                </div>
+                <div className="px-3 py-1 bg-yellow-900/30 text-yellow-400 text-sm rounded">
+                  Coming Soon
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Call Priority</p>
+                  <p className="text-sm text-gray-400">Choose which messages can trigger calls</p>
+                </div>
+                <div className="px-3 py-1 bg-yellow-900/30 text-yellow-400 text-sm rounded">
+                  Coming Soon
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+              <p className="text-sm text-blue-300">
+                <strong>Setup Required:</strong> Pure Calls will be available after you complete the 
+                Twilio integration. See the deployment guide for instructions.
+              </p>
+            </div>
+          </div>
+
+          {/* SETUP STATUS */}
+          <div className="mt-6 bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h3 className="text-white text-lg font-medium mb-4 flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Setup Status
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-yellow-900/30 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-white text-sm">Twilio Integration</p>
+                  <p className="text-xs text-gray-400">Backend API endpoints needed</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-yellow-900/30 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-white text-sm">Message Tracking</p>
+                  <p className="text-xs text-gray-400">System ready, awaiting activation</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-900/30 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-white text-sm">ElevenLabs Voice</p>
+                  <p className="text-xs text-gray-400">Already configured and working!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
   // LOAD BOARD VIEW
   // =====================================================
   if (currentView === 'loads') {
@@ -3269,6 +3638,14 @@ export default function PureDispatcher() {
                       Documents
                     </button>
                     <button
+                      onClick={() => { setCurrentView('callSettings'); setShowProfileMenu(false); updateActivityTimestamp(); }}
+                      className="w-full px-4 py-3 text-left text-sm text-white hover:bg-gray-800 flex items-center gap-2"
+                      title="Pure Calls - Configure when Pure can call you"
+                    >
+                      <PhoneCall className="w-4 h-4 text-green-400" />
+                      Call Settings
+                    </button>
+                    <button
                       onClick={handleLogout}
                       className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-gray-800 flex items-center gap-2 rounded-b-xl"
                     >
@@ -3285,6 +3662,20 @@ export default function PureDispatcher() {
               <MessageCircle className="w-4 h-4" />
               Chat
             </button>
+            {messages.length > 0 && (
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all chat messages?')) {
+                    setMessages([]);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-red-900/50 hover:text-red-400 transition-colors flex items-center gap-2"
+                title="Clear chat history"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear
+              </button>
+            )}
             <button
               onClick={() => setCurrentView('loads')}
               className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
