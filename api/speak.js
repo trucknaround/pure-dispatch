@@ -1,7 +1,6 @@
 // Pure Dispatch - ElevenLabs Voice API Endpoint
 // Generates natural AI voice for Pure's responses
-
-const fetch = require('node-fetch');
+// Uses native fetch (Node 18+)
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -68,7 +67,7 @@ module.exports = async (req, res) => {
         },
         body: JSON.stringify({
           text: textToSpeak,
-          model_id: 'eleven_turbo_v2_5',
+          model_id: 'eleven_turbo_v2',
           voice_settings: {
             stability: 0.65,              // ← SMOOTHNESS: Lower = more expressive, Higher = more stable
             similarity_boost: 0.75,       // ← VOICE CLARITY: Match to original voice
@@ -103,8 +102,9 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Get audio buffer
-    const audioBuffer = await response.buffer();
+    // Get audio buffer (native fetch uses arrayBuffer)
+    const audioArrayBuffer = await response.arrayBuffer();
+    const audioBuffer = Buffer.from(audioArrayBuffer);
     
     // Convert to base64 for JSON response
     const audioBase64 = audioBuffer.toString('base64');
