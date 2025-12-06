@@ -705,29 +705,42 @@ function LoginPage({ onLogin }) {
     // Check stored credentials
     setTimeout(() => {
       const storedCredentials = localStorage.getItem('pureUserCredentials');
+      const savedCarrier = localStorage.getItem('pureCarrier');
+      
+      console.log('🔐 Login attempt:', { email, hasStoredCredentials: !!storedCredentials, hasCarrierData: !!savedCarrier });
       
       if (storedCredentials) {
         try {
           const { email: storedEmail, password: storedPassword } = JSON.parse(storedCredentials);
           
+          console.log('🔐 Comparing:', { 
+            input: email.toLowerCase(), 
+            stored: storedEmail.toLowerCase(),
+            passwordMatch: password === storedPassword 
+          });
+          
           if (email.toLowerCase() === storedEmail.toLowerCase() && password === storedPassword) {
             // Correct credentials - load carrier data
-            const savedCarrier = localStorage.getItem('pureCarrier');
             if (savedCarrier) {
               const carrierData = JSON.parse(savedCarrier);
+              console.log('✅ Login successful, loading carrier data');
               onLogin(carrierData);
             } else {
+              console.log('⚠️ Credentials valid but no carrier data found');
               setError('Account data not found. Please complete registration.');
               onLogin({ isNewUser: true });
             }
           } else {
+            console.log('❌ Invalid credentials');
             setError('Invalid email or password');
           }
         } catch (e) {
+          console.error('❌ Error parsing credentials:', e);
           setError('Error loading account');
         }
       } else {
         // No stored credentials - new user
+        console.log('📝 No credentials found - new user registration');
         onLogin({ isNewUser: true });
       }
       
@@ -751,18 +764,30 @@ function LoginPage({ onLogin }) {
 
     setIsLoading(true);
 
-    // Mock password reset - in production, call backend to send reset email
-    setTimeout(() => {
-      // In production: Send email with secure reset token
-      // await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email: resetEmail })
-      // });
+    try {
+      console.log('📧 Sending password reset email to:', resetEmail);
       
-      setResetSent(true);
+      const response = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('✅ Reset email sent successfully');
+        setResetSent(true);
+      } else {
+        console.error('❌ Reset email failed:', data.error);
+        setError(data.error || 'Failed to send reset email. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Network error sending reset email:', error);
+      setError('Network error. Please check your connection and try again.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   if (showForgotPassword) {
