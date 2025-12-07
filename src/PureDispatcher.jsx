@@ -677,6 +677,7 @@ function LoginPage({ onLogin }) {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
+  const [resetData, setResetData] = useState(null); // Store reset token/link
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -765,7 +766,7 @@ function LoginPage({ onLogin }) {
     setIsLoading(true);
 
     try {
-      console.log('📧 Sending password reset email to:', resetEmail);
+      console.log('📧 Sending password reset request for:', resetEmail);
       
       const response = await fetch('/api/reset-password', {
         method: 'POST',
@@ -774,16 +775,18 @@ function LoginPage({ onLogin }) {
       });
 
       const data = await response.json();
+      console.log('📬 Reset response:', data);
 
       if (response.ok) {
-        console.log('✅ Reset email sent successfully');
+        console.log('✅ Reset request successful');
+        setResetData(data); // Store the reset data (token, link, etc.)
         setResetSent(true);
       } else {
-        console.error('❌ Reset email failed:', data.error);
-        setError(data.error || 'Failed to send reset email. Please try again.');
+        console.error('❌ Reset request failed:', data.error);
+        setError(data.error || 'Failed to send reset request. Please try again.');
       }
     } catch (error) {
-      console.error('❌ Network error sending reset email:', error);
+      console.error('❌ Network error:', error);
       setError('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
@@ -808,20 +811,77 @@ function LoginPage({ onLogin }) {
                 <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Check className="w-6 h-6 text-green-400" />
                 </div>
-                <h3 className="text-xl font-medium text-white mb-2">Check Your Email</h3>
-                <p className="text-gray-400 mb-6">
-                  We've sent password reset instructions to <span className="text-green-400">{resetEmail}</span>
-                </p>
-                <button
-                  onClick={() => {
-                    setShowForgotPassword(false);
-                    setResetSent(false);
-                    setResetEmail('');
-                  }}
-                  className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 transition-colors font-medium"
-                >
-                  Back to Login
-                </button>
+                
+                {resetData?.resetToken ? (
+                  // TEMPORARY: Show reset token directly (until email is set up)
+                  <>
+                    <h3 className="text-xl font-medium text-white mb-2">Password Reset Ready</h3>
+                    <p className="text-gray-400 mb-4">
+                      Reset requested for <span className="text-green-400">{resetEmail}</span>
+                    </p>
+                    
+                    <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-4 text-left">
+                      <p className="text-yellow-400 text-sm mb-3">
+                        ⚠️ <strong>TEMPORARY MODE</strong> - Email sending not yet configured
+                      </p>
+                      <p className="text-white text-sm mb-2">To reset your password:</p>
+                      <ol className="text-gray-300 text-sm space-y-2 ml-4 list-decimal">
+                        <li>Copy the reset code below</li>
+                        <li>Contact your administrator</li>
+                        <li>They'll help you reset your password</li>
+                      </ol>
+                    </div>
+                    
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-4">
+                      <p className="text-gray-400 text-xs mb-2">Reset Code:</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 bg-black px-3 py-2 rounded-lg text-green-400 text-sm font-mono break-all">
+                          {resetData.resetToken}
+                        </code>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(resetData.resetToken);
+                            alert('Reset code copied to clipboard!');
+                          }}
+                          className="px-3 py-2 bg-green-500 text-black rounded-lg hover:bg-green-400 transition-colors text-sm whitespace-nowrap"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setResetSent(false);
+                        setResetEmail('');
+                        setResetData(null);
+                      }}
+                      className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 transition-colors font-medium"
+                    >
+                      Back to Login
+                    </button>
+                  </>
+                ) : (
+                  // PRODUCTION: Email sent successfully
+                  <>
+                    <h3 className="text-xl font-medium text-white mb-2">Check Your Email</h3>
+                    <p className="text-gray-400 mb-6">
+                      We've sent password reset instructions to <span className="text-green-400">{resetEmail}</span>
+                    </p>
+                    <button
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setResetSent(false);
+                        setResetEmail('');
+                        setResetData(null);
+                      }}
+                      className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 transition-colors font-medium"
+                    >
+                      Back to Login
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <>
