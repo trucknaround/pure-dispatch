@@ -2,6 +2,8 @@
 // File: api/reset-password.js
 // Upload this to your Vercel project
 
+import sgMail from '@sendgrid/mail';
+
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -64,7 +66,6 @@ export default async function handler(req, res) {
     console.log('✅ SendGrid API key found');
 
     // Send email via SendGrid
-    const sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
     const resetLink = `https://pure-dispatch.vercel.app/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
