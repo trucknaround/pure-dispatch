@@ -4346,8 +4346,9 @@ export default function PureDispatcher() {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 rounded-lg bg-green-500 text-black flex items-center gap-2">
+          {/* Navigation Buttons - Mobile Optimized */}
+          <div className="flex gap-2 overflow-x-auto md:flex-wrap scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 pb-2">
+            <button className="px-4 py-2 rounded-lg bg-green-500 text-black flex items-center gap-2 whitespace-nowrap flex-shrink-0">
               <MessageCircle className="w-4 h-4" />
               Chat
             </button>
@@ -4358,7 +4359,7 @@ export default function PureDispatcher() {
                     setMessages([]);
                   }
                 }}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-red-900/50 hover:text-red-400 transition-colors flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-red-900/50 hover:text-red-400 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
                 title="Clear chat history"
               >
                 <Trash2 className="w-4 h-4" />
@@ -4367,41 +4368,41 @@ export default function PureDispatcher() {
             )}
             <button
               onClick={() => setCurrentView('loads')}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors whitespace-nowrap flex-shrink-0"
             >
               Loads
             </button>
             <button
               onClick={() => setCurrentView('history')}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <History className="w-4 h-4" />
               History
             </button>
             <button
               onClick={() => setCurrentView('favorites')}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <Star className="w-4 h-4" />
               Favorites
             </button>
             <button
               onClick={() => setCurrentView('documents')}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <FileText className="w-4 h-4" />
               Documents
             </button>
             <button
               onClick={() => setCurrentView('earnings')}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <DollarSign className="w-4 h-4" />
               Earnings
             </button>
             <button
               onClick={() => setCurrentView('settings')}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <Settings className="w-4 h-4" />
               Settings
@@ -4548,21 +4549,21 @@ export default function PureDispatcher() {
         )}
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-800 p-6">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
+      {/* Input - Mobile Optimized */}
+      <div className="border-t border-gray-800 p-4 md:p-6">
+        <div className="max-w-4xl mx-auto flex items-center gap-2 md:gap-3">
           <button
             onClick={() => setAudioEnabled(!audioEnabled)}
-            className={`p-3 rounded-full transition-colors ${audioEnabled ? 'bg-green-500 text-black' : 'bg-gray-800 text-gray-400'}`}
+            className={`p-2 md:p-3 rounded-full transition-colors flex-shrink-0 ${audioEnabled ? 'bg-green-500 text-black' : 'bg-gray-800 text-gray-400'}`}
           >
-            {isSpeaking ? <Volume2 className="w-5 h-5" /> : audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            {isSpeaking ? <Volume2 className="w-4 h-4 md:w-5 md:h-5" /> : audioEnabled ? <Volume2 className="w-4 h-4 md:w-5 md:h-5" /> : <VolumeX className="w-4 h-4 md:w-5 md:h-5" />}
           </button>
           <button
             onClick={handleVoiceInput}
             disabled={isTyping}
-            className={`p-3 rounded-full transition-colors ${isListening ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'} disabled:opacity-50`}
+            className={`p-2 md:p-3 rounded-full transition-colors flex-shrink-0 ${isListening ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'} disabled:opacity-50`}
           >
-            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            {isListening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
           </button>
           <input
             type="text"
@@ -4570,14 +4571,14 @@ export default function PureDispatcher() {
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask Pure anything..."
-            className="flex-1 bg-gray-900 text-white rounded-full px-6 py-3 border border-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+            className="flex-1 min-w-0 bg-gray-900 text-white rounded-full px-4 md:px-6 py-2 md:py-3 border border-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500 text-sm md:text-base"
           />
           <button
             onClick={handleSend}
             disabled={!inputText.trim() || isTyping}
-            className="bg-green-500 text-black p-3 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
+            className="bg-green-500 text-black p-2 md:p-3 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors flex-shrink-0"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
         <div className="max-w-4xl mx-auto mt-3 flex items-center justify-between text-xs text-gray-600">
