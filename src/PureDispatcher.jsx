@@ -667,7 +667,7 @@ const NearbyServicesPanel = React.memo(({ location, onServiceRequest }) => {
 });
 
 // =====================================================
-// LOGIN PAGE COMPONENT (Enhanced with Forgot Password)
+// LOGIN PAGE COMPONENT (Enhanced with Forgot Password & Reset)
 // =====================================================
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -677,7 +677,28 @@ function LoginPage({ onLogin }) {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
-  const [resetData, setResetData] = useState(null); // Store reset token/link
+  const [resetData, setResetData] = useState(null);
+  
+  // Password Reset Page State
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetToken, setResetToken] = useState('');
+  const [resetEmailFromUrl, setResetEmailFromUrl] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
+
+  // Check URL for reset token on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const emailParam = urlParams.get('email');
+    
+    if (token && emailParam) {
+      setShowResetPassword(true);
+      setResetToken(token);
+      setResetEmailFromUrl(emailParam);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -792,6 +813,156 @@ function LoginPage({ onLogin }) {
       setIsLoading(false);
     }
   };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    // Validation
+    if (!newPassword || !confirmPassword) {
+      setError('Please enter and confirm your new password');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Update password in localStorage
+      const storedCredentials = localStorage.getItem('pureUserCredentials');
+      
+      if (storedCredentials) {
+        const credentials = JSON.parse(storedCredentials);
+        
+        // Verify email matches
+        if (credentials.email.toLowerCase() === resetEmailFromUrl.toLowerCase()) {
+          // Update password
+          credentials.password = newPassword;
+          localStorage.setItem('pureUserCredentials', JSON.stringify(credentials));
+          
+          console.log('✅ Password updated successfully');
+          setResetSuccess(true);
+          
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            window.location.href = window.location.origin;
+          }, 2000);
+        } else {
+          setError('Email does not match account');
+        }
+      } else {
+        setError('Account not found. Please register first.');
+      }
+    } catch (error) {
+      console.error('❌ Password reset error:', error);
+      setError('Failed to reset password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reset Password Page
+  if (showResetPassword) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-black" />
+            </div>
+            <h1 className="text-4xl font-light text-white mb-2">Reset Password</h1>
+            <p className="text-gray-400">Enter your new password</p>
+          </div>
+
+          <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800">
+            {resetSuccess ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-6 h-6 text-green-400" />
+                </div>
+                <h3 className="text-xl font-medium text-white mb-2">Password Updated!</h3>
+                <p className="text-gray-400 mb-4">
+                  Your password has been successfully updated.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Redirecting to login...
+                </p>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-light text-white mb-6">Set New Password</h2>
+                
+                <div className="mb-4 bg-gray-800/50 rounded-xl p-3 border border-gray-700">
+                  <p className="text-sm text-gray-400">Resetting password for:</p>
+                  <p className="text-green-400 font-medium">{resetEmailFromUrl}</p>
+                </div>
+
+                {error && (
+                  <div className="mb-4 bg-red-900/20 border border-red-500 rounded-xl p-3 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-300">{error}</p>
+                  </div>
+                )}
+
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-green-500 text-black py-3 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    {isLoading ? 'Updating Password...' : 'Update Password'}
+                  </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => window.location.href = window.location.origin}
+                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                  >
+                    ← Back to Login
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showForgotPassword) {
     return (
