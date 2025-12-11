@@ -1,7 +1,6 @@
 {
   "name": "pure-dispatch",
   "version": "1.0.0",
-  "description": "AI-Powered Virtual Dispatcher for Trucking",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +12,9 @@
     "react-dom": "^18.2.0",
     "lucide-react": "^0.263.1",
     "openai": "^4.20.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
     "@sendgrid/mail": "^8.1.0"
   },
   "devDependencies": {
