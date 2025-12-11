@@ -73,7 +73,7 @@ export default async function handler(req, res) {
     const emailContent = {
       to: email,
       from: {
-        email: 'contact@puredispatch.co.site', // Your verified sender email
+        email: 'winnercircle163@gmail.com', // Your verified sender email
         name: 'Pure Dispatch'
       },
       subject: 'Reset Your Pure Dispatch Password',
