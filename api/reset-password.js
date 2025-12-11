@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     // Send email via SendGrid
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-    const resetLink = `https://pure-dispatch.vercel.app/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const resetLink = `https://pure-dispatch.vercel.app/?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
     const emailContent = {
       to: email,
