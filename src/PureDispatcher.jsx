@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell } from 'lucide-react';
-
-// PURE CALLS - Message Tracking & Auto-Calling System
+import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, import { ...Bell, Shield } from 'lucide-react';
 // NOTE: These files need to be uploaded to your project:
+        import VerificationDashboard from './VerificationDashboard';
 // - src/utils/messageTracking.js (upload message-tracking-system.js here)
 // - src/components/CallSettingsPanel.jsx (already created)
 // Uncomment these imports after uploading the files:
@@ -746,7 +745,10 @@ function LoginPage({ onLogin }) {
             if (savedCarrier) {
               const carrierData = JSON.parse(savedCarrier);
               console.log('✅ Login successful, loading carrier data');
-              onLogin(carrierData);
+             const authToken = btoa(`${email}:${Date.now()}`);
+localStorage.setItem('authToken', authToken);
+console.log('🔐 Auth token saved');
+onLogin(carrierData); onLogin(carrierData);
             } else {
               console.log('⚠️ Credentials valid but no carrier data found');
               setError('Account data not found. Please complete registration.');
@@ -2698,6 +2700,9 @@ export default function PureDispatcher() {
   const handleSubmitPOD = async () => {
     if (podFiles.length === 0) {
       alert('Please upload at least one file (BOL or picture)');
+      const [showVerificationDashboard, setShowVerificationDashboard] = useState(false);
+const [isVerifier, setIsVerifier] = useState(false);
+
       return;
     }
 
@@ -2845,6 +2850,33 @@ export default function PureDispatcher() {
       
       // GPS-based responses
       if (lowerInput.includes('location') || lowerInput.includes('where am i')) {
+       // ADD THIS ENTIRE BLOCK:
+useEffect(() => {
+  const checkVerifierStatus = async () => {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken || !carrier) return;
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/verification/pending`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+
+      if (response.ok) {
+        setIsVerifier(true);
+        console.log('✅ User is a verified team member');
+      } else {
+        setIsVerifier(false);
+      }
+    } catch (error) {
+      console.error('❌ Verifier status check failed:', error);
+      setIsVerifier(false);
+    }
+  };
+
+  if (isLoggedIn && carrier) {
+    checkVerifierStatus();
+  }
+}, [isLoggedIn, carrier]);
         if (location) {
           const googleMapsLink = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
           const speedText = location.speed ? `traveling at ${metersPerSecondToMph(location.speed)} mph` : 'stationary';
@@ -3255,7 +3287,9 @@ export default function PureDispatcher() {
   // Show dashboard if user just logged in/registered
   if (showDashboard) {
     return <Dashboard carrier={carrier} onNavigate={handleDashboardNavigate} onLogout={handleLogout} />;
-  }
+  }if (showVerificationDashboard) {
+  return <VerificationDashboard />;
+}
 
   // =====================================================
   // DOCUMENTS VIEW
@@ -3660,6 +3694,15 @@ export default function PureDispatcher() {
                 <MessageCircle className="w-4 h-4" />
                 Back to Chat
               </button>
+              {isVerifier && (
+  <button
+    onClick={() => setShowVerificationDashboard(true)}
+    className="px-4 py-2 rounded-lg bg-purple-900/30 border border-purple-500/30 text-purple-400 hover:bg-purple-900/50 transition-colors flex items-center gap-2"
+  >
+    <Shield className="w-4 h-4" />
+    Verify Loads
+  </button>
+)}
             </div>
           </div>
         </div>
