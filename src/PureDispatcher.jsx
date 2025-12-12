@@ -1963,6 +1963,8 @@ function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, c
 export default function PureDispatcher() {
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+        const [showVerificationDashboard, setShowVerificationDashboard] = useState(false);
+  const [isVerifier, setIsVerifier] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationStep, setRegistrationStep] = useState('none'); // 'none', 'personal', 'carrier'
