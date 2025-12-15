@@ -2879,43 +2879,46 @@ const [isVerifier, setIsVerifier] = useState(false);
 // =====================================================
 // VERIFICATION SYSTEM - Check if user is a verifier
 // =====================================================
+// =====================================================
+// VERIFICATION SYSTEM - Direct Supabase Check
+// =====================================================
 useEffect(() => {
   const checkVerifierStatus = async () => {
-    const authToken = localStorage.getItem('authToken');
     const userEmail = localStorage.getItem('userEmail');
     
-    console.log('🔍 Verification check starting...', { 
-      hasToken: !!authToken, 
-      email: userEmail,
-      hasCarrier: !!carrier 
-    });
+    console.log('🔍 Direct verification check for:', userEmail);
     
-    if (!authToken || !userEmail) {
-      console.log('⚠️ Missing auth token or email');
+    if (!userEmail) {
+      console.log('❌ No email found');
       setIsVerifier(false);
       return;
     }
 
     try {
-      console.log('📡 Calling verification API...');
+      // Direct Supabase check - NO API needed
+      const supabaseUrl = 'https://epblkquexeubxugfqlst.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwYmxrcXVleGV1Ynh1Z2ZxbHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxOTUwMjcsImV4cCI6MjA0ODc3MTAyN30.VoQE5JPSld03Z0ônUXkSxrJE5vDBN0n7MLH_bZEqE4';
       
-      const response = await fetch(`${BACKEND_URL}/api/verification/pending?limit=1`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `${supabaseUrl}/rest/v1/verification_team?user_email=eq.${userEmail}&can_verify_loads=eq.true&select=*`,
+        {
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          }
         }
-      });
+      );
 
-      console.log('📡 API response status:', response.status);
+      const data = await response.json();
+      
+      console.log('📊 Verification team response:', data);
 
-      if (response.ok) {
+      if (data && data.length > 0) {
         setIsVerifier(true);
         console.log('✅ USER IS A VERIFIED TEAM MEMBER');
       } else {
-        const errorData = await response.json();
-        console.log('❌ Not a verifier:', errorData.error);
         setIsVerifier(false);
+        console.log('❌ Not in verification team');
       }
     } catch (error) {
       console.error('❌ Verification check error:', error);
@@ -2923,12 +2926,11 @@ useEffect(() => {
     }
   };
 
-  // Run check when logged in
   if (isLoggedIn) {
-    console.log('🚀 User logged in, checking verifier status...');
+    console.log('🚀 Checking verification status...');
     checkVerifierStatus();
   }
-}, [isLoggedIn, carrier]);
+}, [isLoggedIn]);
         if (location) {
           const googleMapsLink = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
           const speedText = location.speed ? `traveling at ${metersPerSecondToMph(location.speed)} mph` : 'stationary';
