@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
@@ -12,13 +12,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const { email, password } = req.body;
@@ -27,17 +22,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    console.log('🔐 Login attempt for:', email);
+    const emailLower = email.toLowerCase();
+    console.log('🔐 Login attempt:', emailLower);
 
-    // Get user from database
+    // Get user
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
-      .eq('email', email.toLowerCase())
+      .eq('email', emailLower)
       .single();
 
     if (error || !user) {
-      console.log('❌ User not found:', email);
+      console.log('❌ User not found');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -45,21 +41,18 @@ export default async function handler(req, res) {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     
     if (!passwordMatch) {
-      console.log('❌ Invalid password for:', email);
+      console.log('❌ Invalid password');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
+    // Generate JWT
     const token = jwt.sign(
-      { 
-        userId: user.id,
-        email: user.email
-      },
+      { userId: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    console.log('✅ Login successful for:', email);
+    console.log('✅ Login successful');
 
     return res.status(200).json({
       success: true,
