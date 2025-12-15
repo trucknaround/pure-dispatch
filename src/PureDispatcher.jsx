@@ -700,78 +700,72 @@ function LoginPage({ onLogin }) {
   }, []);
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  setError('');
+  
+  if (!email || !password) {
+    setError('Please enter email and password');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    setError('Please enter a valid email address');
+    return;
+  }
+
+  if (password.length < 8) {
+    setError('Password must be at least 8 characters');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    console.log('🔐 Attempting login via API...');
     
-    if (!email || !password) {
-      setError('Please enter email and password');
-      return;
-    }
+    // Call backend login API
+    const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
+    const data = await response.json();
 
-    // Password validation
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-
-    setIsLoading(true);
-    
-    // Check stored credentials
-    setTimeout(() => {
-      const storedCredentials = localStorage.getItem('pureUserCredentials');
-      const savedCarrier = localStorage.getItem('pureCarrier');
-      
-      console.log('🔐 Login attempt:', { email, hasStoredCredentials: !!storedCredentials, hasCarrierData: !!savedCarrier });
-      
-      if (storedCredentials) {
-        try {
-          const { email: storedEmail, password: storedPassword } = JSON.parse(storedCredentials);
-          
-          console.log('🔐 Comparing:', { 
-            input: email.toLowerCase(), 
-            stored: storedEmail.toLowerCase(),
-            passwordMatch: password === storedPassword 
-          });
-          
-          if (email.toLowerCase() === storedEmail.toLowerCase() && password === storedPassword) {
-            // Correct credentials - load carrier data
-            if (savedCarrier) {
-              const carrierData = JSON.parse(savedCarrier);
-              console.log('✅ Login successful, loading carrier data');
-             const authToken = btoa(`${email}:${Date.now()}`);
-localStorage.setItem('authToken', authToken);
-                    localStorage.setItem('userEmail', email);
-console.log('🔐 Auth token saved');
-onLogin(carrierData); onLogin(carrierData);
-            } else {
-              console.log('⚠️ Credentials valid but no carrier data found');
-              setError('Account data not found. Please complete registration.');
-              onLogin({ isNewUser: true });
-            }
-          } else {
-            console.log('❌ Invalid credentials');
-            setError('Invalid email or password');
-          }
-        } catch (e) {
-          console.error('❌ Error parsing credentials:', e);
-          setError('Error loading account');
-        }
-      } else {
-        // No stored credentials - new user
-        console.log('📝 No credentials found - new user registration');
-        onLogin({ isNewUser: true });
-      }
-      
+    if (!response.ok) {
+      console.log('❌ Login failed:', data.error);
+      setError(data.error || 'Invalid email or password');
       setIsLoading(false);
-    }, 800);
-  };
+      return;
+    }
+
+    console.log('✅ Login successful, token received');
+
+    // Save JWT token
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('userEmail', email);
+    console.log('🔐 Auth token and email saved');
+
+    // Load carrier data
+    const savedCarrier = localStorage.getItem('pureCarrier');
+    if (savedCarrier) {
+      const carrierData = JSON.parse(savedCarrier);
+      onLogin(carrierData);
+    } else {
+      // No carrier data - trigger registration
+      onLogin({ isNewUser: true });
+    }
+
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    setError('Network error. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
