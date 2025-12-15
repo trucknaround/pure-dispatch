@@ -747,6 +747,7 @@ function LoginPage({ onLogin }) {
               console.log('✅ Login successful, loading carrier data');
              const authToken = btoa(`${email}:${Date.now()}`);
 localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userEmail', email);
 console.log('🔐 Auth token saved');
 onLogin(carrierData); onLogin(carrierData);
             } else {
