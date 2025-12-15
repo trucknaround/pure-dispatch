@@ -2855,18 +2855,25 @@ const [isVerifier, setIsVerifier] = useState(false);
       if (lowerInput.includes('location') || lowerInput.includes('where am i')) {
        // ADD THIS ENTIRE BLOCK:
 useEffect(() => {
+  useEffect(() => {
   const checkVerifierStatus = async () => {
-  const authToken = localStorage.getItem('authToken');
-  const userEmail = localStorage.getItem('userEmail');
-  if (!authToken || !carrier || !userEmail) return;
+    const authToken = localStorage.getItem('authToken');
+    const userEmail = localStorage.getItem('userEmail');
+    
+    console.log('🔍 Checking verifier status...', { authToken: !!authToken, userEmail, carrier: !!carrier });
+    
+    if (!authToken || !carrier || !userEmail) {
+      console.log('❌ Missing requirements for verification check');
+      return;
+    }
 
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/verification/pending`, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        'User-Email': userEmail
-      }
-    });
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/verification/pending`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'User-Email': userEmail
+        }
+      });
 
       if (response.ok) {
         setIsVerifier(true);
