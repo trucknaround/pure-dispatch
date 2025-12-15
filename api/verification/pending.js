@@ -149,10 +149,10 @@ const { data: teamMember } = await supabase
     // ============================================
 
     const { data: teamStats } = await supabase
-      .from('verification_team')
-      .select('current_workload, max_workload, total_verifications')
-      .eq('user_id', userId)
-      .single();
+  .from('verification_team')
+  .select('current_workload, max_workload, total_verifications')
+  .eq('user_email', userEmail)
+  .single();
 
     // ============================================
     // RETURN RESULTS
