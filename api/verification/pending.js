@@ -53,12 +53,18 @@ export default async function handler(req, res) {
     // CHECK IF USER IS IN VERIFICATION TEAM
     // ============================================
 
-    const { data: teamMember } = await supabase
-      .from('verification_team')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .single();
+    // Get user email from headers
+const userEmail = req.headers['user-email'];
+if (!userEmail) {
+  return res.status(401).json({ error: 'Missing user email' });
+}
+
+const { data: teamMember } = await supabase
+  .from('verification_team')
+  .select('*')
+  .eq('user_email', userEmail)
+  .eq('can_verify_loads', true)
+  .single();
 
     if (!teamMember) {
       return res.status(403).json({ error: 'User is not authorized to verify loads' });
