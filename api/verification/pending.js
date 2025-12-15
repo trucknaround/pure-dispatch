@@ -1,9 +1,3 @@
-// ============================================
-// GET PENDING VERIFICATIONS
-// ============================================
-// File: api/verification/pending.js
-// ============================================
-
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 
@@ -26,49 +20,46 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+try {
+  // ============================================
+  // VERIFY JWT TOKEN
+  // ============================================
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing authorization token' });
+  }
+
+  const token = authHeader.substring(7);
+  let decoded;
+  
   try {
-    // ============================================
-    // VERIFY JWT TOKEN
-    // ============================================
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    console.error('❌ JWT verification failed:', err.message);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Missing authorization token' });
-    }
+  const userId = decoded.userId;
+  const userEmail = decoded.email;
+  
+  console.log('🔍 Checking verification access for:', userEmail);
 
-    const token = authHeader.substring(7);
-    let decoded;
-    
-    try {
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch (err) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+  // ============================================
+  // CHECK IF USER IS IN VERIFICATION TEAM
+  // ============================================
+  const { data: teamMember, error: teamError } = await supabase
+    .from('verification_team')
+    .select('*')
+    .eq('user_email', userEmail)
+    .eq('can_verify_loads', true)
+    .single();
 
-    const userId = decoded.userId;
+  if (teamError || !teamMember) {
+    console.log('❌ User not in verification team:', userEmail);
+    return res.status(403).json({ error: 'User is not authorized to verify loads' });
+  }
 
-    console.log('🔍 Fetching pending verifications for user:', userId);
-
-    // ============================================
-    // CHECK IF USER IS IN VERIFICATION TEAM
-    // ============================================
-
-    // Get user email from headers
-const userEmail = req.headers['user-email'];
-if (!userEmail) {
-  return res.status(401).json({ error: 'Missing user email' });
-}
-
-const { data: teamMember } = await supabase
-  .from('verification_team')
-  .select('*')
-  .eq('user_email', userEmail)
-  .eq('can_verify_loads', true)
-  .single();
-
-    if (!teamMember) {
-      return res.status(403).json({ error: 'User is not authorized to verify loads' });
-    }
+  console.log('✅ User authorized:', userEmail);
 
     // ============================================
     // GET QUERY PARAMETERS
