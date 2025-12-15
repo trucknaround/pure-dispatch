@@ -722,40 +722,70 @@ function LoginPage({ onLogin }) {
   setIsLoading(true);
 
   try {
-    console.log('🔐 Attempting login via API...');
+    console.log('🔐 Calling login API for:', email);
     
-    // Call backend login API
     const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.log('❌ Login failed:', data.error);
-      setError(data.error || 'Invalid email or password');
+      console.error('❌ Login failed:', data.error);
+      
+      // If user doesn't exist, try to register them
+      if (data.error === 'Invalid credentials') {
+        console.log('🔄 User not found, attempting registration...');
+        
+        const registerResponse = await fetch(`${BACKEND_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const registerData = await registerResponse.json();
+
+        if (!registerResponse.ok) {
+          setError(registerData.error || 'Registration failed');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('✅ Auto-registered and logged in');
+        
+        // Use registration token
+        localStorage.setItem('authToken', registerData.token);
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userId', registerData.user.id);
+        
+        // Trigger carrier registration for new user
+        onLogin({ isNewUser: true });
+        return;
+      }
+      
+      setError(data.error || 'Login failed');
       setIsLoading(false);
       return;
     }
 
-    console.log('✅ Login successful, token received');
+    console.log('✅ Login successful');
 
-    // Save JWT token
+    // Save JWT token and user info
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('userEmail', email);
-    console.log('🔐 Auth token and email saved');
+    localStorage.setItem('userId', data.user.id);
+    console.log('💾 Saved: token, email, userId');
 
     // Load carrier data
     const savedCarrier = localStorage.getItem('pureCarrier');
     if (savedCarrier) {
       const carrierData = JSON.parse(savedCarrier);
+      console.log('📦 Loading carrier data');
       onLogin(carrierData);
     } else {
-      // No carrier data - trigger registration
+      console.log('📝 No carrier data - new registration needed');
       onLogin({ isNewUser: true });
     }
 
@@ -766,7 +796,6 @@ function LoginPage({ onLogin }) {
     setIsLoading(false);
   }
 };
-
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     setError('');
@@ -2847,41 +2876,56 @@ const [isVerifier, setIsVerifier] = useState(false);
       
       // GPS-based responses
       if (lowerInput.includes('location') || lowerInput.includes('where am i')) {
-       // ADD THIS ENTIRE BLOCK:
+// =====================================================
+// VERIFICATION SYSTEM - Check if user is a verifier
+// =====================================================
 useEffect(() => {
-  useEffect(() => {
   const checkVerifierStatus = async () => {
     const authToken = localStorage.getItem('authToken');
     const userEmail = localStorage.getItem('userEmail');
     
-    console.log('🔍 Checking verifier status...', { authToken: !!authToken, userEmail, carrier: !!carrier });
+    console.log('🔍 Verification check starting...', { 
+      hasToken: !!authToken, 
+      email: userEmail,
+      hasCarrier: !!carrier 
+    });
     
-    if (!authToken || !carrier || !userEmail) {
-      console.log('❌ Missing requirements for verification check');
+    if (!authToken || !userEmail) {
+      console.log('⚠️ Missing auth token or email');
+      setIsVerifier(false);
       return;
     }
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/verification/pending`, {
+      console.log('📡 Calling verification API...');
+      
+      const response = await fetch(`${BACKEND_URL}/api/verification/pending?limit=1`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,
-          'User-Email': userEmail
+          'Content-Type': 'application/json'
         }
       });
 
+      console.log('📡 API response status:', response.status);
+
       if (response.ok) {
         setIsVerifier(true);
-        console.log('✅ User is a verified team member');
+        console.log('✅ USER IS A VERIFIED TEAM MEMBER');
       } else {
+        const errorData = await response.json();
+        console.log('❌ Not a verifier:', errorData.error);
         setIsVerifier(false);
       }
     } catch (error) {
-      console.error('❌ Verifier status check failed:', error);
+      console.error('❌ Verification check error:', error);
       setIsVerifier(false);
     }
   };
 
-  if (isLoggedIn && carrier) {
+  // Run check when logged in
+  if (isLoggedIn) {
+    console.log('🚀 User logged in, checking verifier status...');
     checkVerifierStatus();
   }
 }, [isLoggedIn, carrier]);
