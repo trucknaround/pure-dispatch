@@ -747,135 +747,29 @@ function LoginPage({ onLogin }) {
     localStorage.setItem('userEmail', email);
     localStorage.setItem('userId', data.user.id);
 
-    // Load carrier data from database
-    const supabaseUrl = 'https://epblkquexeubxugfqlst.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwYmxrcXVleGV1Ynh1Z2ZxbHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxOTUwMjcsImV4cCI6MjA0ODc3MTAyN30.VoQE5JPSld03Z0ônUXkSxrJE5vDBN0n7MLH_bZEqE4';
+    // Load carrier data from backend
+    console.log('📦 Fetching carrier data from backend...');
     
-    const carrierResponse = await fetch(
-      `${supabaseUrl}/rest/v1/carriers?user_id=eq.${data.user.id}&select=*`,
-      {
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`
-        }
+    const carrierResponse = await fetch(`${BACKEND_URL}/api/auth/get-carrier`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${data.token}`,
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
-    const carriers = await carrierResponse.json();
-
-    if (carriers && carriers.length > 0) {
-      const carrierData = carriers[0];
-      console.log('📦 Carrier data loaded from database');
+    if (carrierResponse.ok) {
+      const carrierData = await carrierResponse.json();
+      console.log('✅ Carrier data loaded');
       
-      // Cache carrier data in localStorage
-      localStorage.setItem('pureCarrier', JSON.stringify(carrierData));
+      // Cache carrier data
+      localStorage.setItem('pureCarrier', JSON.stringify(carrierData.carrier));
       
-      onLogin(carrierData);
+      onLogin(carrierData.carrier);
     } else {
       console.log('📝 No carrier data - new registration needed');
       onLogin({ isNewUser: true });
     }
-
-  } catch (error) {
-    console.error('❌ Login error:', error);
-    setError('Network error. Please try again.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!resetEmail) {
-      setError('Please enter your email address');
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      console.log('📧 Sending password reset request for:', resetEmail);
-      
-      const response = await fetch('/api/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetEmail })
-      });
-
-      const data = await response.json();
-      console.log('📬 Reset response:', data);
-
-      if (response.ok) {
-        console.log('✅ Reset request successful');
-        setResetData(data); // Store the reset data (token, link, etc.)
-        setResetSent(true);
-      } else {
-        console.error('❌ Reset request failed:', data.error);
-        setError(data.error || 'Failed to send reset request. Please try again.');
-      }
-    } catch (error) {
-      console.error('❌ Network error:', error);
-      setError('Network error. Please check your connection and try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePasswordReset = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    // Validation
-    if (!newPassword || !confirmPassword) {
-      setError('Please enter and confirm your new password');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Update password in localStorage
-      const storedCredentials = localStorage.getItem('pureUserCredentials');
-      
-      if (storedCredentials) {
-        const credentials = JSON.parse(storedCredentials);
-        
-        // Verify email matches
-        if (credentials.email.toLowerCase() === resetEmailFromUrl.toLowerCase()) {
-          // Update password
-          credentials.password = newPassword;
-          localStorage.setItem('pureUserCredentials', JSON.stringify(credentials));
-          
-          console.log('✅ Password updated successfully');
-          setResetSuccess(true);
-          
-          // Redirect to login after 2 seconds
-          setTimeout(() => {
-            window.location.href = window.location.origin;
-          }, 2000);
-        } else {
-          setError('Email does not match account');
-        }
-      } else {
-        setError('Account not found. Please register first.');
-      }
-    } catch (error) {
       console.error('❌ Password reset error:', error);
       setError('Failed to reset password. Please try again.');
     } finally {
