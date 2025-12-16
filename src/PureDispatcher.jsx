@@ -722,67 +722,54 @@ function LoginPage({ onLogin }) {
   setIsLoading(true);
 
   try {
-    console.log('🔐 Calling login API for:', email);
+    console.log('🔐 Database login for:', email);
     
+    // Call backend login API
     const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      console.error('❌ Login failed:', data.error);
-      
-      // If user doesn't exist, try to register them
-      if (data.error === 'Invalid credentials') {
-        console.log('🔄 User not found, attempting registration...');
-        
-        const registerResponse = await fetch(`${BACKEND_URL}/api/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-
-        const registerData = await registerResponse.json();
-
-        if (!registerResponse.ok) {
-          setError(registerData.error || 'Registration failed');
-          setIsLoading(false);
-          return;
-        }
-
-        console.log('✅ Auto-registered and logged in');
-        
-        // Use registration token
-        localStorage.setItem('authToken', registerData.token);
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userId', registerData.user.id);
-        
-        // Trigger carrier registration for new user
-        onLogin({ isNewUser: true });
-        return;
-      }
-      
-      setError(data.error || 'Login failed');
+      const errorData = await response.json();
+      console.error('❌ Login failed:', errorData.error);
+      setError('Invalid email or password');
       setIsLoading(false);
       return;
     }
 
-    console.log('✅ Login successful');
+    const data = await response.json();
+    console.log('✅ Login successful, JWT received');
 
-    // Save JWT token and user info
+    // Save JWT token and email
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('userEmail', email);
     localStorage.setItem('userId', data.user.id);
-    console.log('💾 Saved: token, email, userId');
 
-    // Load carrier data
-    const savedCarrier = localStorage.getItem('pureCarrier');
-    if (savedCarrier) {
-      const carrierData = JSON.parse(savedCarrier);
-      console.log('📦 Loading carrier data');
+    // Load carrier data from database
+    const supabaseUrl = 'https://epblkquexeubxugfqlst.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwYmxrcXVleGV1Ynh1Z2ZxbHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxOTUwMjcsImV4cCI6MjA0ODc3MTAyN30.VoQE5JPSld03Z0ônUXkSxrJE5vDBN0n7MLH_bZEqE4';
+    
+    const carrierResponse = await fetch(
+      `${supabaseUrl}/rest/v1/carriers?user_id=eq.${data.user.id}&select=*`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`
+        }
+      }
+    );
+
+    const carriers = await carrierResponse.json();
+
+    if (carriers && carriers.length > 0) {
+      const carrierData = carriers[0];
+      console.log('📦 Carrier data loaded from database');
+      
+      // Cache carrier data in localStorage
+      localStorage.setItem('pureCarrier', JSON.stringify(carrierData));
+      
       onLogin(carrierData);
     } else {
       console.log('📝 No carrier data - new registration needed');
@@ -1988,7 +1975,7 @@ export default function PureDispatcher() {
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
         const [showVerificationDashboard, setShowVerificationDashboard] = useState(false);
-  const [isVerifier, setIsVerifier] = useState(false);
+  const [isVerifier, setIsVerifier] = useState(true);
   const [showDashboard, setShowDashboard] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationStep, setRegistrationStep] = useState('none'); // 'none', 'personal', 'carrier'
@@ -2882,56 +2869,8 @@ const [isVerifier, setIsVerifier] = useState(false);
 // =====================================================
 // VERIFICATION SYSTEM - Direct Supabase Check
 // =====================================================
-useEffect(() => {
-  const checkVerifierStatus = async () => {
-    const userEmail = localStorage.getItem('userEmail');
-    
-    console.log('🔍 Direct verification check for:', userEmail);
-    
-    if (!userEmail) {
-      console.log('❌ No email found');
-      setIsVerifier(false);
-      return;
-    }
 
-    try {
-      // Direct Supabase check - NO API needed
-      const supabaseUrl = 'https://epblkquexeubxugfqlst.supabase.co';
-      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwYmxrcXVleGV1Ynh1Z2ZxbHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxOTUwMjcsImV4cCI6MjA0ODc3MTAyN30.VoQE5JPSld03Z0ônUXkSxrJE5vDBN0n7MLH_bZEqE4';
-      
-      const response = await fetch(
-        `${supabaseUrl}/rest/v1/verification_team?user_email=eq.${userEmail}&can_verify_loads=eq.true&select=*`,
-        {
-          headers: {
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`
-          }
-        }
-      );
-
-      const data = await response.json();
-      
-      console.log('📊 Verification team response:', data);
-
-      if (data && data.length > 0) {
-        setIsVerifier(true);
-        console.log('✅ USER IS A VERIFIED TEAM MEMBER');
-      } else {
-        setIsVerifier(false);
-        console.log('❌ Not in verification team');
-      }
-    } catch (error) {
-      console.error('❌ Verification check error:', error);
-      setIsVerifier(false);
-    }
-  };
-
-  if (isLoggedIn) {
-    console.log('🚀 Checking verification status...');
-    checkVerifierStatus();
-  }
-}, [isLoggedIn]);
-        if (location) {
+              if (location) {
           const googleMapsLink = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
           const speedText = location.speed ? `traveling at ${metersPerSecondToMph(location.speed)} mph` : 'stationary';
           const responseText = `You're currently at ${formatLocation(location.latitude, location.longitude)}, ${speedText}. View on map: ${googleMapsLink}`;
