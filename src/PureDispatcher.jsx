@@ -3749,6 +3749,15 @@ const [isVerifier, setIsVerifier] = useState(false);
                 <MessageCircle className="w-4 h-4" />
                 Chat
               </button>
+                    {isVerifier && (
+                <button
+                  onClick={() => setShowVerificationDashboard(true)}
+                  className="px-4 py-2 rounded-lg bg-purple-900/30 text-purple-400 hover:bg-purple-900/50 transition-colors flex items-center gap-2"
+                >
+                  <Shield className="w-4 h-4" />
+                  Verify Loads
+                </button>
+              )}
               <button className="px-4 py-2 rounded-lg bg-green-500 text-black">
                 Loads
               </button>
