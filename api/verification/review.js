@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     const { data: updated, error } = await supabase
       .from('load_verifications')
       .update({
-        status: action === 'approve' ? 'verified' : 'rejected',
+        status: action === 'verify' ? 'verified' : 'rejected',
         reviewed_by: decoded.userId,
         reviewed_at: new Date().toISOString(),
         verifier_notes: notes || null,
