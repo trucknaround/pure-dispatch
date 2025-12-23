@@ -3437,77 +3437,80 @@ const [isVerifier, setIsVerifier] = useState(false);
             <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
               <h2 className={`text-xl font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-6 flex items-center gap-2`}>
                 <User className="w-5 h-5 text-green-400" />
+     {/* Personal Information */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
+            <div className="flex items-center gap-3 mb-6">
+              <User className="w-6 h-6 text-green-400" />
+              <h2 className="text-2xl font-light text-white">
                 Personal Information
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Full Name</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.name || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Email Address</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.email || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.personalPhone || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Address</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.address || 'N/A'}</p>
-                </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Email Address</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{localStorage.getItem('userEmail') || 'N/A'}</p>
+              </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.phone || 'N/A'}</p>
+              </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Address</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.address || 'N/A'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>City</label>
                   <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.city || 'N/A'}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>State</label>
-                    <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.state || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>ZIP Code</label>
-                    <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.zip || 'N/A'}</p>
-                  </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>State</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.state || 'N/A'}</p>
                 </div>
               </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>ZIP Code</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.zip || 'N/A'}</p>
+              </div>
             </div>
+          </div>
 
-            {/* Company Information */}
-            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
-              <h2 className={`text-xl font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-6 flex items-center gap-2`}>
-                <Building className="w-5 h-5 text-green-400" />
+          {/* Company Information */}
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
+            <div className="flex items-center gap-3 mb-6">
+              <Building className="w-6 h-6 text-green-400" />
+              <h2 className="text-2xl font-light text-white">
                 Company Information
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Name</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.companyName || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.phone || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>DOT Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dotNumber || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>MC Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mcNumber || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>EIN</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.ein || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Number of Trucks</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.numberOfTrucks || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Equipment Types</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.equipmentTypes?.join(', ') || 'N/A'}</p>
-                </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Name</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.company_name || 'N/A'}</p>
+              </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>DOT Number</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dot_number || 'N/A'}</p>
+              </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>MC Number</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mc_number || 'N/A'}</p>
+              </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>EIN</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.ein || 'N/A'}</p>
+              </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Number of Trucks</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.number_of_trucks || 'N/A'}</p>
+              </div>
+              <div>
+                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Equipment Types</label>
+                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>
+                  {carrier?.equipment_types ? 
+                    (Array.isArray(carrier.equipment_types) ? carrier.equipment_types.join(', ') : carrier.equipment_types) 
+                    : 'N/A'}
+                </p>
               </div>
             </div>
           </div>
@@ -3519,16 +3522,13 @@ const [isVerifier, setIsVerifier] = useState(false);
                 // Navigate to carrier registration to edit
                 setCurrentView('profile-edit');
               }}
-              className={`px-6 py-3 rounded-xl ${theme === 'light' ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-black hover:bg-green-400'} transition-colors font-medium flex items-center gap-2`}
+              className={`px-6 py-3 rounded-xl ${theme === 'light' ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-black hover:bg-green-600'} transition-colors`}
             >
               <User className="w-4 h-4" />
               Edit Profile
             </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+          </div>         
+              
 
   // =====================================================
   // PROFILE EDIT VIEW (Carrier Registration)
