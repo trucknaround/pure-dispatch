@@ -3533,28 +3533,7 @@ const [isVerifier, setIsVerifier] = useState(false);
   // =====================================================
   // PROFILE EDIT VIEW (Carrier Registration)
   // =====================================================
-  if (currentView === 'profile-edit') {
-    // Ensure carrier object has all required fields with defaults
-    const carrierWithDefaults = {
-      ...carrier,
-      phone: carrier?.phone || '', // Company phone - ensure it exists
-      companyName: carrier?.companyName || '',
-      mcNumber: carrier?.mcNumber || '',
-      dotNumber: carrier?.dotNumber || '',
-      equipmentTypes: carrier?.equipmentTypes || [],
-      trailerSizes: carrier?.trailerSizes || [],
-      operatingRegions: carrier?.operatingRegions || []
-    };
-    
-    return (
-      <CarrierRegistration 
-        onRegistrationComplete={handleRegistrationComplete} 
-        carrier={carrierWithDefaults}
-        isEditing={true}
-        onBack={() => setCurrentView('home')} // Back to chat
-      />
-    );
-  }
+ 
 
   // =====================================================
   // CALL SETTINGS VIEW - Pure Calls Configuration
