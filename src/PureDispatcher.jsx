@@ -3528,13 +3528,6 @@ const [isVerifier, setIsVerifier] = useState(false);
               Edit Profile
             </button>
           </div>         
-              
-
-  // =====================================================
-  // PROFILE EDIT VIEW (Carrier Registration)
-  // =====================================================
- 
-
   // =====================================================
   // CALL SETTINGS VIEW - Pure Calls Configuration
   // =====================================================
