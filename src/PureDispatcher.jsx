@@ -3522,94 +3522,9 @@ const [isVerifier, setIsVerifier] = useState(false);
   // =====================================================
   // LOAD BOARD VIEW
   // =====================================================
-  if (currentView === 'loads') {
-    return (
-      <div className="min-h-screen bg-black">
-        <div className="border-b border-gray-800">
-          <div className="max-w-6xl mx-auto px-6 py-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-black" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-light text-white">Pure</h1>
-                  <p className="text-sm text-gray-400">Available Loads</p>
-                </div>
-              </div>
-              <button
-                onClick={handleRefreshLoads}
-                disabled={isLoadingLoads}
-                className="px-4 py-2 rounded-lg bg-green-500 text-black hover:bg-green-400 disabled:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoadingLoads ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentView('home')}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Chat
-              </button>
-                    {isVerifier && (
-                <button
-                  onClick={() => setShowVerificationDashboard(true)}
-                  className="px-4 py-2 rounded-lg bg-purple-900/30 text-purple-400 hover:bg-purple-900/50 transition-colors flex items-center gap-2"
-                >
-                  <Shield className="w-4 h-4" />
-                  Verify Loads
-                </button>
-              )}
-              <button className="px-4 py-2 rounded-lg bg-green-500 text-black">
-                Loads
-              </button>
-              <button
-                onClick={() => setCurrentView('history')}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <History className="w-4 h-4" />
-                History
-              </button>
-              <button
-                onClick={() => setCurrentView('favorites')}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <Star className="w-4 h-4" />
-                Favorites
-              </button>
-              <button
-                onClick={() => setCurrentView('documents')}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Documents
-              </button>
-            </div>
-          </div>
-        </div>
+  
 
-        <div className="max-w-6xl mx-auto px-6 py-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            {loads.map(load => (
-              <LoadCard
-                key={load.id}
-                load={load}
-                onClaim={handleClaimLoad}
-                onNav={handleNavigateToLocation}
-                onFavorite={handleToggleFavorite}
-                isFavorited={favoriteLoads.some(l => l.id === load.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // =====================================================
+ // =====================================================
   // HISTORY VIEW
   // =====================================================
   if (currentView === 'history') {
