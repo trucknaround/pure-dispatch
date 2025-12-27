@@ -3172,7 +3172,7 @@ const [isVerifier, setIsVerifier] = useState(false);
   // =====================================================
   // DOCUMENTS VIEW
   // =====================================================
-  if (currentView === 'documents') {
+  /*if (currentView === 'documents') {
     return (
       <div className="min-h-screen bg-black">
         {/* Header */}
@@ -3392,12 +3392,12 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     );
-  }
+  }*/
 
   // =====================================================
   // PROFILE VIEW
   // =====================================================
-  if (currentView === 'profile') {
+  /*if (currentView === 'profile') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'}`}>
         {/* Header */}
@@ -3517,17 +3517,11 @@ const [isVerifier, setIsVerifier] = useState(false);
             >
               <User className="w-4 h-4" />
               Edit Profile
-            </button>
-
-  // =====================================================
-  // LOAD BOARD VIEW
-  // =====================================================
-  
-
+            </button>*/
  // =====================================================
   // HISTORY VIEW
   // =====================================================
-  if (currentView === 'history') {
+  /*if (currentView === 'history') {
     return (
       <div className="min-h-screen bg-black">
         <div className="border-b border-gray-800">
@@ -3603,12 +3597,12 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     );
-  }
+  }*/
 
   // =====================================================
   // FAVORITES VIEW
   // =====================================================
-  if (currentView === 'favorites') {
+  /*if (currentView === 'favorites') {
     return (
       <div className="min-h-screen bg-black">
         <div className="border-b border-gray-800">
@@ -3683,12 +3677,12 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     );
-  }
+  }*/
 
   // =====================================================
   // EARNINGS ANALYTICS VIEW
   // =====================================================
-  if (currentView === 'earnings') {
+  /*if (currentView === 'earnings') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'} flex flex-col`}>
         {/* Header */}
@@ -3856,12 +3850,12 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     );
-  }
+  }*/
 
   // =====================================================
   // SETTINGS VIEW
   // =====================================================
-  if (currentView === 'settings') {
+  /*if (currentView === 'settings') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'} flex flex-col`}>
         {/* Header */}
@@ -4150,7 +4144,7 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     );
-  }
+  }*/
 
   // =====================================================
   // HOME / CHAT VIEW
