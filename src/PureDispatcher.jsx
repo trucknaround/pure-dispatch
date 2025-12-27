@@ -3392,7 +3392,8 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     );
-  }*/
+  }
+*/
 
   // =====================================================
   // PROFILE VIEW
