@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield } from 'lucide-react';
 // NOTE: These files need to be uploaded to your project:
-        import VerificationDashboard from './VerificationDashboard';
+        // import VerificationDashboard from './VerificationDashboard';
 // - src/utils/messageTracking.js (upload message-tracking-system.js here)
 // - src/components/CallSettingsPanel.jsx (already created)
 // Uncomment these imports after uploading the files:
 /*
 import { 
-  MessageTracker, 
-  CallSettings, 
-  MESSAGE_PRIORITY,
-  createTrackedMessage,
-  formatCallMessage
-} from './utils/messageTracking';
-import CallSettingsPanel from './components/CallSettingsPanel';
+  //MessageTracker, 
+  //CallSettings, 
+  //MESSAGE_PRIORITY,
+  //createTrackedMessage,
+  //formatCallMessage
+//} from './utils/messageTracking';
+//import CallSettingsPanel from './components/CallSettingsPanel';
 */
 
 // Backend URL
