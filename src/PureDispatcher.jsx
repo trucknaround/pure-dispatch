@@ -3,11 +3,8 @@ import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, Mi
 // NOTE: These files need to be uploaded to your project:
         // import VerificationDashboard from './VerificationDashboard';
 // - src/utils/messageTracking.js (upload message-tracking-system.js here)
-// - src/components/CallSettingsPanel.jsx (already created)
 // Uncomment these imports after uploading the files:
 /*
-
-//import CallSettingsPanel from './components/CallSettingsPanel';
 */
 
 // Backend URL
