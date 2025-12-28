@@ -1,5 +1,5 @@
 /**
- * Pure Dispatch - Load Search API with Verification
+ * Pure Dispatch - Load Search API with Verification 
  * 
  * Endpoint: /api/searchLoads
  * 
