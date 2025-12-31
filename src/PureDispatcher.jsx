@@ -1,10 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react'; 
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield } from 'lucide-react';
 // NOTE: These files need to be uploaded to your project:
-        // import VerificationDashboard from './VerificationDashboard';
+        import VerificationDashboard from './VerificationDashboard';
 // - src/utils/messageTracking.js (upload message-tracking-system.js here)
+// - src/components/CallSettingsPanel.jsx (already created)
 // Uncomment these imports after uploading the files:
 /*
+import { 
+  MessageTracker, 
+  CallSettings, 
+  MESSAGE_PRIORITY,
+  createTrackedMessage,
+  formatCallMessage
+} from './utils/messageTracking';
+import CallSettingsPanel from './components/CallSettingsPanel';
 */
 
 // Backend URL
@@ -3172,7 +3181,6 @@ const [isVerifier, setIsVerifier] = useState(false);
   // =====================================================
   // DOCUMENTS VIEW
   // =====================================================
-  /*
   if (currentView === 'documents') {
     return (
       <div className="min-h-screen bg-black">
@@ -3394,12 +3402,10 @@ const [isVerifier, setIsVerifier] = useState(false);
       </div>
     );
   }
-*/
 
   // =====================================================
   // PROFILE VIEW
   // =====================================================
-  /*
   if (currentView === 'profile') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'}`}>
@@ -3431,80 +3437,77 @@ const [isVerifier, setIsVerifier] = useState(false);
             <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
               <h2 className={`text-xl font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-6 flex items-center gap-2`}>
                 <User className="w-5 h-5 text-green-400" />
-     {/* Personal Information */}
-          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
-            <div className="flex items-center gap-3 mb-6">
-              <User className="w-6 h-6 text-green-400" />
-              <h2 className="text-2xl font-light text-white">
                 Personal Information
               </h2>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Email Address</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{localStorage.getItem('userEmail') || 'N/A'}</p>
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.phone || 'N/A'}</p>
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Address</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.address || 'N/A'}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Full Name</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Email Address</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.personalPhone || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Address</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.address || 'N/A'}</p>
+                </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>City</label>
                   <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.city || 'N/A'}</p>
                 </div>
-                <div>
-                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>State</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.state || 'N/A'}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>State</label>
+                    <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.state || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>ZIP Code</label>
+                    <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.zip || 'N/A'}</p>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>ZIP Code</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.zip || 'N/A'}</p>
-              </div>
             </div>
-          </div>
 
-          {/* Company Information */}
-          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
-            <div className="flex items-center gap-3 mb-6">
-              <Building className="w-6 h-6 text-green-400" />
-              <h2 className="text-2xl font-light text-white">
+            {/* Company Information */}
+            <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-2xl p-6 border`}>
+              <h2 className={`text-xl font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'} mb-6 flex items-center gap-2`}>
+                <Building className="w-5 h-5 text-green-400" />
                 Company Information
               </h2>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Name</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.company_name || 'N/A'}</p>
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>DOT Number</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dot_number || 'N/A'}</p>
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>MC Number</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mc_number || 'N/A'}</p>
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>EIN</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.ein || 'N/A'}</p>
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Number of Trucks</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.number_of_trucks || 'N/A'}</p>
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Equipment Types</label>
-                <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>
-                  {carrier?.equipment_types ? 
-                    (Array.isArray(carrier.equipment_types) ? carrier.equipment_types.join(', ') : carrier.equipment_types) 
-                    : 'N/A'}
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Name</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.companyName || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.phone || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>DOT Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dotNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>MC Number</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mcNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>EIN</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.ein || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Number of Trucks</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.numberOfTrucks || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Equipment Types</label>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.equipmentTypes?.join(', ') || 'N/A'}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -3516,17 +3519,295 @@ const [isVerifier, setIsVerifier] = useState(false);
                 // Navigate to carrier registration to edit
                 setCurrentView('profile-edit');
               }}
-              className={`px-6 py-3 rounded-xl ${theme === 'light' ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-black hover:bg-green-600'} transition-colors`}
+              className={`px-6 py-3 rounded-xl ${theme === 'light' ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-black hover:bg-green-400'} transition-colors font-medium flex items-center gap-2`}
             >
               <User className="w-4 h-4" />
               Edit Profile
             </button>
-                  */
- // =====================================================
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // PROFILE EDIT VIEW (Carrier Registration)
+  // =====================================================
+  if (currentView === 'profile-edit') {
+    // Ensure carrier object has all required fields with defaults
+    const carrierWithDefaults = {
+      ...carrier,
+      phone: carrier?.phone || '', // Company phone - ensure it exists
+      companyName: carrier?.companyName || '',
+      mcNumber: carrier?.mcNumber || '',
+      dotNumber: carrier?.dotNumber || '',
+      equipmentTypes: carrier?.equipmentTypes || [],
+      trailerSizes: carrier?.trailerSizes || [],
+      operatingRegions: carrier?.operatingRegions || []
+    };
+    
+    return (
+      <CarrierRegistration 
+        onRegistrationComplete={handleRegistrationComplete} 
+        carrier={carrierWithDefaults}
+        isEditing={true}
+        onBack={() => setCurrentView('home')} // Back to chat
+      />
+    );
+  }
+
+  // =====================================================
+  // CALL SETTINGS VIEW - Pure Calls Configuration
+  // =====================================================
+  if (currentView === 'callSettings') {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="border-b border-gray-800">
+          <div className="max-w-4xl mx-auto px-6 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                  <Truck className="w-5 h-5 text-black" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-light text-white">Pure Calls</h1>
+                  <p className="text-sm text-gray-400">Configure AI calling features</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCurrentView('home')}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Back to Chat
+              </button>
+              {isVerifier && (
+  <button
+    onClick={() => setShowVerificationDashboard(true)}
+    className="px-4 py-2 rounded-lg bg-purple-900/30 border border-purple-500/30 text-purple-400 hover:bg-purple-900/50 transition-colors flex items-center gap-2"
+  >
+    <Shield className="w-4 h-4" />
+    Verify Loads
+  </button>
+)}
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          {/* INFO BANNER */}
+          <div className="mb-6 bg-gradient-to-r from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-xl p-5">
+            <div className="flex items-start gap-3">
+              <PhoneCall className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-white font-medium mb-2">What is Pure Calls?</h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Pure Calls is an advanced feature that automatically calls you when you don't respond to 
+                  important messages. Perfect for when you're driving and can't check your phone - Pure will 
+                  call you with urgent load opportunities, broker requests, and critical alerts.
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Works with any phone</span>
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Natural AI voice</span>
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Smart call timing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PLACEHOLDER FOR CALL SETTINGS PANEL */}
+          {/* NOTE: Uncomment this when CallSettingsPanel.jsx is uploaded */}
+          {/*
+          <CallSettingsPanel
+            callSettings={callSettings}
+            onUpdate={(settings) => {
+              console.log('Settings updated:', settings);
+              updateActivityTimestamp();
+            }}
+          />
+          */}
+
+          {/* TEMPORARY PLACEHOLDER UI */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h3 className="text-white text-lg font-medium mb-4">Call Settings</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Enable Calls</p>
+                  <p className="text-sm text-gray-400">Allow Pure to call you for urgent messages</p>
+                </div>
+                <div className="px-3 py-1 bg-yellow-900/30 text-yellow-400 text-sm rounded">
+                  Coming Soon
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Quiet Hours</p>
+                  <p className="text-sm text-gray-400">No calls during sleep time</p>
+                </div>
+                <div className="px-3 py-1 bg-yellow-900/30 text-yellow-400 text-sm rounded">
+                  Coming Soon
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Call Priority</p>
+                  <p className="text-sm text-gray-400">Choose which messages can trigger calls</p>
+                </div>
+                <div className="px-3 py-1 bg-yellow-900/30 text-yellow-400 text-sm rounded">
+                  Coming Soon
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+              <p className="text-sm text-blue-300">
+                <strong>Setup Required:</strong> Pure Calls will be available after you complete the 
+                Twilio integration. See the deployment guide for instructions.
+              </p>
+            </div>
+          </div>
+
+          {/* SETUP STATUS */}
+          <div className="mt-6 bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h3 className="text-white text-lg font-medium mb-4 flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Setup Status
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-yellow-900/30 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-white text-sm">Twilio Integration</p>
+                  <p className="text-xs text-gray-400">Backend API endpoints needed</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-yellow-900/30 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-white text-sm">Message Tracking</p>
+                  <p className="text-xs text-gray-400">System ready, awaiting activation</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-900/30 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-white text-sm">ElevenLabs Voice</p>
+                  <p className="text-xs text-gray-400">Already configured and working!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // LOAD BOARD VIEW
+  // =====================================================
+  if (currentView === 'loads') {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="border-b border-gray-800">
+          <div className="max-w-6xl mx-auto px-6 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                  <Truck className="w-5 h-5 text-black" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-light text-white">Pure</h1>
+                  <p className="text-sm text-gray-400">Available Loads</p>
+                </div>
+              </div>
+              <button
+                onClick={handleRefreshLoads}
+                disabled={isLoadingLoads}
+                className="px-4 py-2 rounded-lg bg-green-500 text-black hover:bg-green-400 disabled:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoadingLoads ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentView('home')}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Chat
+              </button>
+                    {isVerifier && (
+                <button
+                  onClick={() => setShowVerificationDashboard(true)}
+                  className="px-4 py-2 rounded-lg bg-purple-900/30 text-purple-400 hover:bg-purple-900/50 transition-colors flex items-center gap-2"
+                >
+                  <Shield className="w-4 h-4" />
+                  Verify Loads
+                </button>
+              )}
+              <button className="px-4 py-2 rounded-lg bg-green-500 text-black">
+                Loads
+              </button>
+              <button
+                onClick={() => setCurrentView('history')}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                History
+              </button>
+              <button
+                onClick={() => setCurrentView('favorites')}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <Star className="w-4 h-4" />
+                Favorites
+              </button>
+              <button
+                onClick={() => setCurrentView('documents')}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Documents
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <div className="grid md:grid-cols-2 gap-4">
+            {loads.map(load => (
+              <LoadCard
+                key={load.id}
+                load={load}
+                onClaim={handleClaimLoad}
+                onNav={handleNavigateToLocation}
+                onFavorite={handleToggleFavorite}
+                isFavorited={favoriteLoads.some(l => l.id === load.id)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
   // HISTORY VIEW
   // =====================================================
-  /*
-    if (currentView === 'history') {
+  if (currentView === 'history') {
     return (
       <div className="min-h-screen bg-black">
         <div className="border-b border-gray-800">
@@ -3603,12 +3884,10 @@ const [isVerifier, setIsVerifier] = useState(false);
       </div>
     );
   }
- */
 
   // =====================================================
   // FAVORITES VIEW
   // =====================================================
-  /*
   if (currentView === 'favorites') {
     return (
       <div className="min-h-screen bg-black">
@@ -3685,12 +3964,10 @@ const [isVerifier, setIsVerifier] = useState(false);
       </div>
     );
   }
- */
 
   // =====================================================
   // EARNINGS ANALYTICS VIEW
   // =====================================================
-  /*
   if (currentView === 'earnings') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'} flex flex-col`}>
@@ -3860,13 +4137,11 @@ const [isVerifier, setIsVerifier] = useState(false);
       </div>
     );
   }
-*/
 
   // =====================================================
   // SETTINGS VIEW
   // =====================================================
-  /*
-   if (currentView === 'settings') {
+  if (currentView === 'settings') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'} flex flex-col`}>
         {/* Header */}
@@ -4155,7 +4430,7 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     );
-  }*/
+  }
 
   // =====================================================
   // HOME / CHAT VIEW
