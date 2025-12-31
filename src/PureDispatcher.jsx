@@ -1584,22 +1584,46 @@ function PersonalRegistration({ onComplete, existingData }) {
   );
 }
 // =====================================================
-// CARRIER REGISTRATION COMPONENT (Enhanced with Trailer Sizes)
+// =====================================================
+// ENHANCED CARRIER REGISTRATION COMPONENT
+// With Personal Info, FMCSA Verification, and MC/DOT Locking
 // =====================================================
 function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = false, onBack }) {
   const equipmentOptions = ['Dry Van', 'Reefer', 'Flatbed', 'Step Deck', 'Box Truck', 'Tanker'];
   const trailerSizeOptions = ['26ft', '48ft', '53ft'];
   const regionOptions = ['Northeast', 'Southeast', 'Midwest', 'Southwest', 'West', 'All Regions'];
   
+  // Personal Information State
+  const [personalInfo, setPersonalInfo] = useState({
+    fullName: carrier?.fullName || '',
+    email: carrier?.email || '',
+    personalPhone: carrier?.personalPhone || '',
+    address: carrier?.address || '',
+    city: carrier?.city || '',
+    state: carrier?.state || '',
+    zipCode: carrier?.zipCode || ''
+  });
+
+  // Company Information State
   const [formData, setFormData] = useState({
     companyName: carrier?.companyName || '',
     mcNumber: carrier?.mcNumber || '',
     dotNumber: carrier?.dotNumber || '',
     phone: carrier?.phone || '',
+    ein: carrier?.ein || '',
+    numberOfTrucks: carrier?.numberOfTrucks || '',
     equipmentTypes: carrier?.equipmentTypes || [],
     trailerSizes: carrier?.trailerSizes || [],
     operatingRegions: carrier?.operatingRegions || []
   });
+
+  // Verification State
+  const [mcVerified, setMcVerified] = useState(carrier?.mcVerified || false);
+  const [dotVerified, setDotVerified] = useState(carrier?.dotVerified || false);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -1630,29 +1654,114 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
     }));
   };
 
+  // NEW: FMCSA Verification Function
+  const handleVerifyCarrier = async () => {
+    if (!formData.mcNumber && !formData.dotNumber) {
+      setVerificationError('Enter MC or DOT number to verify');
+      return;
+    }
+
+    setVerifying(true);
+    setVerificationError('');
+    setVerificationSuccess(false);
+
+    try {
+      const response = await fetch('/api/verify-carrier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mcNumber: formData.mcNumber,
+          dotNumber: formData.dotNumber
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.verified) {
+        // Auto-populate from FMCSA data
+        if (data.legalName) {
+          setFormData(prev => ({ ...prev, companyName: data.legalName }));
+        }
+        if (data.mcNumber) {
+          setFormData(prev => ({ ...prev, mcNumber: data.mcNumber }));
+          setMcVerified(true);
+        }
+        if (data.dotNumber) {
+          setFormData(prev => ({ ...prev, dotNumber: data.dotNumber }));
+          setDotVerified(true);
+        }
+        if (data.phone) {
+          setFormData(prev => ({ ...prev, phone: data.phone }));
+        }
+        if (data.physicalAddress) {
+          setPersonalInfo(prev => ({
+            ...prev,
+            address: data.physicalAddress.street || prev.address,
+            city: data.physicalAddress.city || prev.city,
+            state: data.physicalAddress.state || prev.state,
+            zipCode: data.physicalAddress.zip || prev.zipCode
+          }));
+        }
+        if (data.totalPowerUnits) {
+          setFormData(prev => ({ ...prev, numberOfTrucks: String(data.totalPowerUnits) }));
+        }
+
+        setVerificationSuccess(true);
+        setTimeout(() => setVerificationSuccess(false), 3000);
+      } else {
+        setVerificationError(data.error || 'Verification failed');
+      }
+    } catch (err) {
+      setVerificationError('Verification service error');
+      console.error('Verification error:', err);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setError('');
+
+    // Validate personal info (if editing)
+    if (isEditing) {
+      if (!personalInfo.fullName || !personalInfo.email) {
+        setError('Full name and email are required');
+        return;
+      }
+    }
+
+    // Validate company info
     if (!formData.companyName || !formData.mcNumber || !formData.dotNumber || !formData.phone) {
       setError('Please fill in all required fields');
       return;
     }
+
     if (formData.equipmentTypes.length === 0) {
       setError('Please select at least one equipment type');
       return;
     }
+
     if (formData.trailerSizes.length === 0) {
       setError('Please select at least one trailer size');
       return;
     }
 
     setIsSubmitting(true);
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/carriers/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          ...personalInfo,
+          mcVerified,
+          dotVerified
+        })
       });
+
       const data = await response.json();
+
       if (data.success) {
         onRegistrationComplete(data.carrier);
       } else {
@@ -1662,6 +1771,9 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
       const mockCarrier = {
         id: carrier?.id || `carrier_${Date.now()}`,
         ...formData,
+        ...personalInfo,
+        mcVerified,
+        dotVerified,
         status: 'verified',
         apiUsageRemaining: carrier?.apiUsageRemaining || 100,
         apiUsageCount: carrier?.apiUsageCount || 0,
@@ -1700,18 +1812,114 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
           )}
         </div>
       </div>
+
       <div className="max-w-2xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <h2 className="text-3xl font-light text-white mb-2">Carrier & Equipment Details</h2>
-          <p className="text-gray-400">Complete your carrier registration with company and equipment information.</p>
+          <h2 className="text-3xl font-light text-white mb-2">
+            {isEditing ? 'Edit Profile' : 'Carrier & Equipment Details'}
+          </h2>
+          <p className="text-gray-400">
+            {isEditing 
+              ? 'Update your personal and company information' 
+              : 'Complete your carrier registration with company and equipment information'}
+          </p>
         </div>
+
         {error && (
           <div className="mb-6 bg-red-900/20 border border-red-500 rounded-xl p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-300">{error}</p>
           </div>
         )}
+
         <div className="space-y-6">
+          {/* Personal Information Section */}
+          {isEditing && (
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+              <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-green-400" />
+                Personal Information
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                  <input
+                    type="text"
+                    value={personalInfo.fullName}
+                    onChange={(e) => setPersonalInfo(prev => ({ ...prev, fullName: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                  <input
+                    type="email"
+                    value={personalInfo.email}
+                    onChange={(e) => setPersonalInfo(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Personal Phone</label>
+                  <input
+                    type="tel"
+                    value={personalInfo.personalPhone}
+                    onChange={(e) => setPersonalInfo(prev => ({ ...prev, personalPhone: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
+                  <input
+                    type="text"
+                    value={personalInfo.address}
+                    onChange={(e) => setPersonalInfo(prev => ({ ...prev, address: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                    placeholder="123 Main Street"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">City</label>
+                    <input
+                      type="text"
+                      value={personalInfo.city}
+                      onChange={(e) => setPersonalInfo(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                      placeholder="Atlanta"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">State</label>
+                    <input
+                      type="text"
+                      value={personalInfo.state}
+                      onChange={(e) => setPersonalInfo(prev => ({ ...prev, state: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                      placeholder="GA"
+                      maxLength="2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">ZIP</label>
+                    <input
+                      type="text"
+                      value={personalInfo.zipCode}
+                      onChange={(e) => setPersonalInfo(prev => ({ ...prev, zipCode: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                      placeholder="30303"
+                      maxLength="5"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Company Information */}
           <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
             <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
               <Building className="w-5 h-5 text-green-400" />
@@ -1720,20 +1928,132 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Company Name *</label>
-                <input type="text" value={formData.companyName} onChange={(e) => setFormData(prev => ({...prev, companyName: e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500" placeholder="ABC Trucking LLC" />
+                <input
+                  type="text"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="ABC Trucking LLC"
+                />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
+                {/* MC Number with Lock */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">MC Number *</label>
-                  <input type="text" value={formData.mcNumber} onChange={(e) => setFormData(prev => ({...prev, mcNumber: e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500" placeholder="MC-123456" />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.mcNumber}
+                      onChange={(e) => !mcVerified && setFormData(prev => ({ ...prev, mcNumber: e.target.value }))}
+                      disabled={mcVerified}
+                      className={`w-full px-4 py-3 rounded-xl border ${
+                        mcVerified ? 'border-green-500 bg-gray-900 cursor-not-allowed' : 'border-gray-700 bg-gray-800'
+                      } text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500 pr-10`}
+                      placeholder="MC-123456"
+                    />
+                    {mcVerified && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <Lock className="w-4 h-4 text-green-400" />
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                      </div>
+                    )}
+                  </div>
+                  {mcVerified && (
+                    <p className="text-xs text-gray-400 mt-1">Verified. Contact support to change.</p>
+                  )}
                 </div>
+
+                {/* DOT Number with Lock */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">DOT Number *</label>
-                  <input type="text" value={formData.dotNumber} onChange={(e) => setFormData(prev => ({...prev, dotNumber: e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500" placeholder="1234567" />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.dotNumber}
+                      onChange={(e) => !dotVerified && setFormData(prev => ({ ...prev, dotNumber: e.target.value }))}
+                      disabled={dotVerified}
+                      className={`w-full px-4 py-3 rounded-xl border ${
+                        dotVerified ? 'border-green-500 bg-gray-900 cursor-not-allowed' : 'border-gray-700 bg-gray-800'
+                      } text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500 pr-10`}
+                      placeholder="1234567"
+                    />
+                    {dotVerified && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <Lock className="w-4 h-4 text-green-400" />
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                      </div>
+                    )}
+                  </div>
+                  {dotVerified && (
+                    <p className="text-xs text-gray-400 mt-1">Verified. Contact support to change.</p>
+                  )}
                 </div>
               </div>
+
+              {/* Verify Button */}
+              {(!mcVerified || !dotVerified) && (
+                <button
+                  onClick={handleVerifyCarrier}
+                  disabled={verifying || (!formData.mcNumber && !formData.dotNumber)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                >
+                  {verifying ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Verifying with FMCSA...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Verify with FMCSA
+                    </>
+                  )}
+                </button>
+              )}
+
+              {verificationError && (
+                <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/20 p-3 rounded-xl">
+                  <AlertCircle className="w-4 h-4" />
+                  {verificationError}
+                </div>
+              )}
+
+              {verificationSuccess && (
+                <div className="flex items-center gap-2 text-green-400 text-sm bg-green-900/20 p-3 rounded-xl">
+                  <CheckCircle className="w-4 h-4" />
+                  Carrier verified successfully! Information auto-populated.
+                </div>
+              )}
+
+              {isEditing && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">EIN</label>
+                    <input
+                      type="text"
+                      value={formData.ein}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ein: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                      placeholder="12-3456789"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Number of Trucks</label>
+                    <input
+                      type="number"
+                      value={formData.numberOfTrucks}
+                      onChange={(e) => setFormData(prev => ({ ...prev, numberOfTrucks: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                      placeholder="5"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
+
+          {/* Contact Information */}
           <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
             <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
               <Phone className="w-5 h-5 text-green-400" />
@@ -1742,10 +2062,18 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Company Number *</label>
-                <input type="tel" value={formData.phone} onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500" placeholder="(555) 123-4567" />
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none placeholder-gray-500"
+                  placeholder="(555) 123-4567"
+                />
               </div>
             </div>
           </div>
+
+          {/* Equipment Types */}
           <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
             <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
               <Package className="w-5 h-5 text-green-400" />
@@ -1753,12 +2081,23 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {equipmentOptions.map((equipment) => (
-                <button key={equipment} type="button" onClick={() => toggleEquipment(equipment)} className={`px-4 py-3 rounded-xl border-2 transition-all ${formData.equipmentTypes.includes(equipment.toLowerCase()) ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'}`}>
+                <button
+                  key={equipment}
+                  type="button"
+                  onClick={() => toggleEquipment(equipment)}
+                  className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                    formData.equipmentTypes.includes(equipment.toLowerCase())
+                      ? 'border-green-500 bg-green-500/10 text-green-400'
+                      : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'
+                  }`}
+                >
                   {equipment}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Trailer Sizes */}
           <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
             <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
               <Truck className="w-5 h-5 text-green-400" />
@@ -1766,12 +2105,23 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
             </h3>
             <div className="grid grid-cols-3 gap-3">
               {trailerSizeOptions.map((size) => (
-                <button key={size} type="button" onClick={() => toggleTrailerSize(size)} className={`px-4 py-3 rounded-xl border-2 transition-all ${formData.trailerSizes.includes(size) ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'}`}>
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => toggleTrailerSize(size)}
+                  className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                    formData.trailerSizes.includes(size)
+                      ? 'border-green-500 bg-green-500/10 text-green-400'
+                      : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'
+                  }`}
+                >
                   {size}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Operating Regions */}
           <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
             <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-green-400" />
@@ -1779,22 +2129,39 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {regionOptions.map((region) => (
-                <button key={region} type="button" onClick={() => toggleRegion(region)} className={`px-4 py-3 rounded-xl border-2 transition-all ${formData.operatingRegions.includes(region) ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'}`}>
+                <button
+                  key={region}
+                  type="button"
+                  onClick={() => toggleRegion(region)}
+                  className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                    formData.operatingRegions.includes(region)
+                      ? 'border-green-500 bg-green-500/10 text-green-400'
+                      : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'
+                  }`}
+                >
                   {region}
                 </button>
               ))}
             </div>
           </div>
-          <button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-green-500 text-black py-4 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors text-lg font-medium">
+
+          {/* Submit Button */}
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full bg-green-500 text-black py-4 rounded-full hover:bg-green-400 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors text-lg font-medium"
+          >
             {isSubmitting ? (carrier ? 'Updating...' : 'Registering...') : (carrier ? 'Update Profile' : 'Register & Continue')}
           </button>
-          <p className="text-xs text-gray-500 text-center">By {carrier ? 'updating' : 'registering'}, you agree to our Terms of Service and Privacy Policy.</p>
+
+          <p className="text-xs text-gray-500 text-center">
+            By {carrier ? 'updating' : 'registering'}, you agree to our Terms of Service and Privacy Policy.
+          </p>
         </div>
       </div>
     </div>
   );
 }
-
 // =====================================================
 // LOAD CARD COMPONENT
 // =====================================================
