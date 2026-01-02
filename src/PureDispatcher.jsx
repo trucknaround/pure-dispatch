@@ -1106,9 +1106,11 @@ function Dashboard({ carrier, onNavigate, onLogout }) {
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <Truck className="w-5 h-5 text-black" />
-            </div>
+           <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
             <div>
               <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
               <p className="text-sm text-gray-400">{carrier?.companyName || 'Welcome'}</p>
@@ -1318,9 +1320,11 @@ function PersonalRegistration({ onComplete, existingData }) {
     <div className="min-h-screen bg-black">
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-            <Truck className="w-5 h-5 text-black" />
-          </div>
+          <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
           <div>
             <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
             <p className="text-sm text-gray-400">Personal Information - Step 1 of 2</p>
@@ -1791,9 +1795,11 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <Truck className="w-5 h-5 text-black" />
-            </div>
+            <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
             <div>
               <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
               <p className="text-sm text-gray-400">
@@ -3555,9 +3561,11 @@ const [isVerifier, setIsVerifier] = useState(false);
         <div className="border-b border-gray-800">
           <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                <Truck className="w-5 h-5 text-black" />
-              </div>
+             <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
               <div>
                 <h1 className="text-2xl font-light text-white">Pure</h1>
                 <p className="text-sm text-gray-400">Document Management</p>
@@ -3933,9 +3941,11 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-4xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-black" />
-                </div>
+                <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
                 <div>
                   <h1 className="text-2xl font-light text-white">Pure Calls</h1>
                   <p className="text-sm text-gray-400">Configure AI calling features</p>
@@ -4091,9 +4101,11 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-black" />
-                </div>
+                <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
                 <div>
                   <h1 className="text-2xl font-light text-white">Pure</h1>
                   <p className="text-sm text-gray-400">Available Loads</p>
@@ -4181,9 +4193,11 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-black" />
-                </div>
+                <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
                 <div>
                   <h1 className="text-2xl font-light text-white">Pure</h1>
                   <p className="text-sm text-gray-400">Load History</p>
@@ -4262,9 +4276,11 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-black" />
-                </div>
+                <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
                 <div>
                   <h1 className="text-2xl font-light text-white">Pure</h1>
                   <p className="text-sm text-gray-400">Favorite Loads</p>
@@ -4809,9 +4825,11 @@ const [isVerifier, setIsVerifier] = useState(false);
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                <Truck className="w-5 h-5 text-black" />
-              </div>
+              <img 
+  src="/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
               <div>
                 <h1 className="text-2xl font-light text-white">Pure</h1>
                 <p className="text-sm text-gray-400">{carrier?.companyName || 'Carrier'}</p>
