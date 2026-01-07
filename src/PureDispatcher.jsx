@@ -685,6 +685,85 @@ function LoginPage({ onLogin }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
+        // Handle forgot password request
+const handleForgotPassword = async (e) => {
+  e.preventDefault();
+  setError('');
+  setIsLoading(true);
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: resetEmail })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      setResetSent(true);
+      setResetData(data);
+    } else {
+      setError(data.error || 'Failed to send reset email');
+    }
+  } catch (err) {
+    console.error('Password reset error:', err);
+    setError('Failed to send reset email. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+// Handle password reset with token
+const handlePasswordReset = async (e) => {
+  e.preventDefault();
+  setError('');
+
+  if (!newPassword || !confirmPassword) {
+    setError('Please fill in all fields');
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    setError('Password must be at least 8 characters');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    setError('Passwords do not match');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/auth/update-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: resetEmailFromUrl,
+        token: resetToken,
+        newPassword
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      setResetSuccess(true);
+      setTimeout(() => {
+        window.location.href = window.location.origin;
+      }, 2000);
+    } else {
+      setError(data.error || 'Failed to reset password');
+    }
+  } catch (err) {
+    console.error('Password reset error:', err);
+    setError('Failed to reset password. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Check URL for reset token on mount
   useEffect(() => {
@@ -3817,11 +3896,11 @@ const [isVerifier, setIsVerifier] = useState(false);
               <div className="space-y-4">
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Full Name</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.name || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{user?.full_name || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Email Address</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.email || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{user?.email || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
@@ -3857,7 +3936,7 @@ const [isVerifier, setIsVerifier] = useState(false);
               <div className="space-y-4">
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Name</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.companyName || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.company_Name || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Number</label>
@@ -3865,11 +3944,11 @@ const [isVerifier, setIsVerifier] = useState(false);
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>DOT Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dotNumber || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dot_Number || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>MC Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mcNumber || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mc_Number || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>EIN</label>
