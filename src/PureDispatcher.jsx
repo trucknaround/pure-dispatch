@@ -18,64 +18,11 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* EXACT Pure Dispatch Logo */}
-      <svg className={logoSize} viewBox="0 0 240 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="darkGreen" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style={{stopColor: '#059669', stopOpacity: 1}} />
-            <stop offset="100%" style={{stopColor: '#047857', stopOpacity: 1}} />
-          </linearGradient>
-          <filter id="dropShadow">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
-            <feOffset dx="0" dy="4" result="offsetblur"/>
-            <feFlood floodColor="#000" floodOpacity="0.3"/>
-            <feComposite in2="offsetblur" operator="in"/>
-            <feMerge>
-              <feMergeNode/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        
-        {/* Main Head Circle - Dark Green */}
-        <circle cx="120" cy="100" r="65" fill="url(#darkGreen)" filter="url(#dropShadow)"/>
-        
-        {/* Dark ring around head */}
-        <circle cx="120" cy="100" r="65" fill="none" stroke="#1f2937" strokeWidth="8"/>
-        
-        {/* White inner ring */}
-        <circle cx="120" cy="100" r="58" fill="none" stroke="white" strokeWidth="4"/>
-        
-        {/* Left Headset Cushion */}
-        <ellipse cx="65" cy="95" rx="20" ry="28" fill="#065f46" stroke="#1f2937" strokeWidth="2"/>
-        
-        {/* Right Headset Cushion */}
-        <ellipse cx="175" cy="95" rx="20" ry="28" fill="#065f46" stroke="#1f2937" strokeWidth="2"/>
-        
-        {/* Headset Band (over the head) */}
-        <path d="M 65 75 Q 120 50 175 75" stroke="#1f2937" strokeWidth="10" fill="none" strokeLinecap="round"/>
-        <path d="M 65 75 Q 120 50 175 75" stroke="#065f46" strokeWidth="6" fill="none" strokeLinecap="round"/>
-        
-        {/* Microphone Boom - Gray */}
-        <path d="M 175 110 L 190 125 L 200 140" stroke="#6b7280" strokeWidth="6" fill="none" strokeLinecap="round"/>
-        
-        {/* Microphone End */}
-        <ellipse cx="202" cy="145" rx="8" ry="10" fill="#374151"/>
-        <ellipse cx="202" cy="145" rx="5" ry="7" fill="#4b5563"/>
-        
-        {/* Letter P - Bold with outline */}
-        <text x="120" y="120" fontSize="70" fontWeight="900" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif" stroke="#047857" strokeWidth="6">P</text>
-        <text x="120" y="120" fontSize="70" fontWeight="900" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">P</text>
-        
-        {/* Rounded rectangle background for P */}
-        <rect x="95" y="70" width="50" height="50" rx="8" fill="none" stroke="#047857" strokeWidth="3"/>
-        
-        {/* Body/Shoulders - Darker Green */}
-        <path d="M 60 155 Q 120 175 180 155 L 190 245 Q 120 260 50 245 Z" fill="#065f46" stroke="#1f2937" strokeWidth="3"/>
-        
-        {/* Gray collar detail */}
-        <path d="M 85 160 Q 120 170 155 160" stroke="#9ca3af" strokeWidth="5" fill="none" strokeLinecap="round"/>
-      </svg>
+      <img 
+        src="https://i.postimg.cc/Z0tN6CBY/1765292235.png"
+        alt="Pure Dispatch Logo" 
+        className={`${logoSize} object-contain`}
+      />
       
       {showText && (
         <h1 className={`${textSize} font-bold text-white tracking-wide`}>
