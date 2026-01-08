@@ -1131,10 +1131,7 @@ const handlePasswordReset = async (e) => {
     <div className="min-h-screen bg-black flex items-center justify-center px-6">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Truck className="w-8 h-8 text-black" />
-          </div>
-          <h1 className="text-4xl font-light text-white mb-2">Pure Dispatch</h1>
+          <Logo size="xl" showText={true} />
           <p className="text-gray-400">AI-Powered Virtual Dispatcher</p>
         </div>
 
@@ -1221,13 +1218,8 @@ function Dashboard({ carrier, onNavigate, onLogout }) {
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-           <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
+           <Logo size="md" showText={true} />
             <div>
-              <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
               <p className="text-sm text-gray-400">{carrier?.companyName || 'Welcome'}</p>
             </div>
           </div>
