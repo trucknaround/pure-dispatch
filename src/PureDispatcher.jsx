@@ -2329,6 +2329,7 @@ export default function PureDispatcher() {
   
   // Existing state
   const [carrier, setCarrier] = useState(null);
+        const [user, setUser] = useState(null);
   const [currentView, setCurrentView] = useState('home');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
