@@ -206,10 +206,10 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
-              src="/pure-dispatch-logo.png" 
-              alt="Pure Dispatch" 
-              className="w-12 h-12 object-contain"
-            />
+  src="https://pure-dispatch.vercel.app/pure-dispatch-logo.png" 
+  alt="Pure Dispatch" 
+  className="w-12 h-12 object-contain"
+/>
             <div>
               <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
               <p className="text-sm text-gray-400">
