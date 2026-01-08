@@ -2518,16 +2518,31 @@ export default function PureDispatcher() {
       const savedFavorites = localStorage.getItem('pureFavoriteLoads');
       
       if (savedCarrier) {
-        try {
-          const carrierData = JSON.parse(savedCarrier);
-          setCarrier(carrierData);
-          setIsRegistered(true);
-          setIsLoggedIn(true);
-          setShowDashboard(true); // Show dashboard so user can choose Chat or Profile
-        } catch (e) {
-          localStorage.removeItem('pureCarrier');
-        }
-      }
+  try {
+    const carrierData = JSON.parse(savedCarrier);
+    setCarrier(carrierData);
+    setIsRegistered(true);
+    setIsLoggedIn(true);
+    setShowDashboard(true);
+    
+    // ADDED: Also fetch user data from backend
+    const authToken = localStorage.getItem('authToken');
+    if (authToken) {
+      fetch(`${BACKEND_URL}/api/profile/get`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.user) {
+            setUser(data.user); // THIS LINE IS CRITICAL
+          }
+        })
+        .catch(err => console.error('Failed to load user data:', err));
+    }
+  } catch (e) {
+    localStorage.removeItem('pureCarrier');
+  }
+}
       
       if (savedDocs) {
         try {
