@@ -19,10 +19,9 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img 
-        src="https://i.postimg.cc/Z0tN6CBY/1765292235.png"
+        src="https://i.postimg.cc/g0VG0rdv/1765292235-removebg-preview.png"
         alt="Pure Dispatch Logo" 
-        className={`${logoSize} object-contain mix-blend-screen`}
-        style={{ background: 'transparent' }}
+        className={`${logoSize} object-contain`}
       />
       
       {showText && (
