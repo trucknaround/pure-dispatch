@@ -1,4 +1,3 @@
-// Add this Logo component code at the top of your file
 const Logo = ({ size = 'md', showText = true, className = '' }) => {
   const sizeMap = {
     sm: 'w-8 h-8',
@@ -19,11 +18,14 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <img 
-        src="https://i.imgur.com/YOUR_LOGO_HERE.png"
-        alt="Pure Dispatch Logo" 
-        className={`${logoSize} object-contain drop-shadow-lg`}
-      />
+      {/* Green dispatcher icon */}
+      <div className={`${logoSize} rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black border-4 border-white shadow-2xl relative`}>
+        <span className="text-4xl absolute">P</span>
+        {/* Headset effect */}
+        <div className="absolute -left-1 top-1 w-3 h-3 bg-green-800 rounded-full"></div>
+        <div className="absolute -right-1 top-1 w-3 h-3 bg-green-800 rounded-full"></div>
+      </div>
+      
       {showText && (
         <h1 className={`${textSize} font-bold text-white tracking-wide`}>
           Pure Dispatch
