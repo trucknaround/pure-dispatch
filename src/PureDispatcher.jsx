@@ -18,31 +18,52 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Pure Dispatch Logo - Green Dispatcher with Headset */}
-      <svg className={logoSize} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Head/Circle Background */}
-        <circle cx="100" cy="80" r="45" fill="#22c55e" stroke="#16a34a" strokeWidth="3"/>
+      {/* Exact Pure Dispatch Logo Replica */}
+      <svg className={logoSize} viewBox="0 0 300 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{stopColor: '#22c55e', stopOpacity: 1}} />
+            <stop offset="100%" style={{stopColor: '#16a34a', stopOpacity: 1}} />
+          </linearGradient>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="4" stdDeviation="8" floodOpacity="0.3"/>
+          </filter>
+        </defs>
         
-        {/* Headset Left */}
-        <ellipse cx="65" cy="70" rx="10" ry="15" fill="#15803d"/>
-        <rect x="60" y="55" width="8" height="8" rx="4" fill="#15803d"/>
+        {/* Main Head Circle */}
+        <circle cx="150" cy="120" r="70" fill="url(#greenGrad)" stroke="#0f5132" strokeWidth="6" filter="url(#shadow)"/>
         
-        {/* Headset Right */}
-        <ellipse cx="135" cy="70" rx="10" ry="15" fill="#15803d"/>
-        <rect x="132" y="55" width="8" height="8" rx="4" fill="#15803d"/>
+        {/* Inner white circle border */}
+        <circle cx="150" cy="120" r="60" fill="none" stroke="white" strokeWidth="4"/>
         
-        {/* Headset Band */}
-        <path d="M 65 60 Q 100 45 135 60" stroke="#15803d" strokeWidth="8" fill="none" strokeLinecap="round"/>
+        {/* Headset - Left Ear */}
+        <ellipse cx="90" cy="115" rx="18" ry="25" fill="#15803d" stroke="#0f5132" strokeWidth="2"/>
+        <rect x="85" y="95" width="10" height="12" rx="5" fill="#15803d"/>
         
-        {/* Microphone */}
-        <path d="M 135 85 Q 145 95 150 105" stroke="#166534" strokeWidth="6" fill="none" strokeLinecap="round"/>
-        <circle cx="150" cy="108" r="5" fill="#166534"/>
+        {/* Headset - Right Ear */}
+        <ellipse cx="210" cy="115" rx="18" ry="25" fill="#15803d" stroke="#0f5132" strokeWidth="2"/>
+        <rect x="205" y="95" width="10" height="12" rx="5" fill="#15803d"/>
         
-        {/* Letter P */}
-        <text x="100" y="95" fontSize="48" fontWeight="bold" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">P</text>
+        {/* Headset Band (curved over head) */}
+        <path d="M 90 95 Q 150 65 210 95" stroke="#0f5132" strokeWidth="12" fill="none" strokeLinecap="round"/>
+        <path d="M 90 95 Q 150 65 210 95" stroke="#15803d" strokeWidth="8" fill="none" strokeLinecap="round"/>
         
-        {/* Body/Shoulders */}
-        <path d="M 55 115 Q 100 135 145 115 L 145 145 Q 100 155 55 145 Z" fill="#15803d" stroke="#166534" strokeWidth="2"/>
+        {/* Microphone Boom */}
+        <path d="M 210 130 Q 235 145 245 165" stroke="#0f5132" strokeWidth="8" fill="none" strokeLinecap="round"/>
+        <path d="M 210 130 Q 235 145 245 165" stroke="#94a3b8" strokeWidth="5" fill="none" strokeLinecap="round"/>
+        
+        {/* Microphone End */}
+        <ellipse cx="248" cy="170" rx="10" ry="8" fill="#0f5132"/>
+        <ellipse cx="248" cy="170" rx="7" ry="6" fill="#475569"/>
+        
+        {/* Letter P - Bold and prominent */}
+        <text x="150" y="145" fontSize="80" fontWeight="900" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif" stroke="#0f5132" strokeWidth="2">P</text>
+        
+        {/* Body/Shoulders Base */}
+        <path d="M 80 180 Q 150 210 220 180 L 230 280 Q 150 300 70 280 Z" fill="url(#greenGrad)" stroke="#0f5132" strokeWidth="4"/>
+        
+        {/* Neck/Collar detail */}
+        <ellipse cx="150" cy="185" rx="35" ry="15" fill="#16a34a" stroke="#0f5132" strokeWidth="2"/>
       </svg>
       
       {showText && (
