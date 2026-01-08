@@ -18,52 +18,63 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Exact Pure Dispatch Logo Replica */}
-      <svg className={logoSize} viewBox="0 0 300 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* EXACT Pure Dispatch Logo */}
+      <svg className={logoSize} viewBox="0 0 240 280" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style={{stopColor: '#22c55e', stopOpacity: 1}} />
-            <stop offset="100%" style={{stopColor: '#16a34a', stopOpacity: 1}} />
+          <linearGradient id="darkGreen" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{stopColor: '#059669', stopOpacity: 1}} />
+            <stop offset="100%" style={{stopColor: '#047857', stopOpacity: 1}} />
           </linearGradient>
-          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="4" stdDeviation="8" floodOpacity="0.3"/>
+          <filter id="dropShadow">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+            <feOffset dx="0" dy="4" result="offsetblur"/>
+            <feFlood floodColor="#000" floodOpacity="0.3"/>
+            <feComposite in2="offsetblur" operator="in"/>
+            <feMerge>
+              <feMergeNode/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
           </filter>
         </defs>
         
-        {/* Main Head Circle */}
-        <circle cx="150" cy="120" r="70" fill="url(#greenGrad)" stroke="#0f5132" strokeWidth="6" filter="url(#shadow)"/>
+        {/* Main Head Circle - Dark Green */}
+        <circle cx="120" cy="100" r="65" fill="url(#darkGreen)" filter="url(#dropShadow)"/>
         
-        {/* Inner white circle border */}
-        <circle cx="150" cy="120" r="60" fill="none" stroke="white" strokeWidth="4"/>
+        {/* Dark ring around head */}
+        <circle cx="120" cy="100" r="65" fill="none" stroke="#1f2937" strokeWidth="8"/>
         
-        {/* Headset - Left Ear */}
-        <ellipse cx="90" cy="115" rx="18" ry="25" fill="#15803d" stroke="#0f5132" strokeWidth="2"/>
-        <rect x="85" y="95" width="10" height="12" rx="5" fill="#15803d"/>
+        {/* White inner ring */}
+        <circle cx="120" cy="100" r="58" fill="none" stroke="white" strokeWidth="4"/>
         
-        {/* Headset - Right Ear */}
-        <ellipse cx="210" cy="115" rx="18" ry="25" fill="#15803d" stroke="#0f5132" strokeWidth="2"/>
-        <rect x="205" y="95" width="10" height="12" rx="5" fill="#15803d"/>
+        {/* Left Headset Cushion */}
+        <ellipse cx="65" cy="95" rx="20" ry="28" fill="#065f46" stroke="#1f2937" strokeWidth="2"/>
         
-        {/* Headset Band (curved over head) */}
-        <path d="M 90 95 Q 150 65 210 95" stroke="#0f5132" strokeWidth="12" fill="none" strokeLinecap="round"/>
-        <path d="M 90 95 Q 150 65 210 95" stroke="#15803d" strokeWidth="8" fill="none" strokeLinecap="round"/>
+        {/* Right Headset Cushion */}
+        <ellipse cx="175" cy="95" rx="20" ry="28" fill="#065f46" stroke="#1f2937" strokeWidth="2"/>
         
-        {/* Microphone Boom */}
-        <path d="M 210 130 Q 235 145 245 165" stroke="#0f5132" strokeWidth="8" fill="none" strokeLinecap="round"/>
-        <path d="M 210 130 Q 235 145 245 165" stroke="#94a3b8" strokeWidth="5" fill="none" strokeLinecap="round"/>
+        {/* Headset Band (over the head) */}
+        <path d="M 65 75 Q 120 50 175 75" stroke="#1f2937" strokeWidth="10" fill="none" strokeLinecap="round"/>
+        <path d="M 65 75 Q 120 50 175 75" stroke="#065f46" strokeWidth="6" fill="none" strokeLinecap="round"/>
+        
+        {/* Microphone Boom - Gray */}
+        <path d="M 175 110 L 190 125 L 200 140" stroke="#6b7280" strokeWidth="6" fill="none" strokeLinecap="round"/>
         
         {/* Microphone End */}
-        <ellipse cx="248" cy="170" rx="10" ry="8" fill="#0f5132"/>
-        <ellipse cx="248" cy="170" rx="7" ry="6" fill="#475569"/>
+        <ellipse cx="202" cy="145" rx="8" ry="10" fill="#374151"/>
+        <ellipse cx="202" cy="145" rx="5" ry="7" fill="#4b5563"/>
         
-        {/* Letter P - Bold and prominent */}
-        <text x="150" y="145" fontSize="80" fontWeight="900" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif" stroke="#0f5132" strokeWidth="2">P</text>
+        {/* Letter P - Bold with outline */}
+        <text x="120" y="120" fontSize="70" fontWeight="900" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif" stroke="#047857" strokeWidth="6">P</text>
+        <text x="120" y="120" fontSize="70" fontWeight="900" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">P</text>
         
-        {/* Body/Shoulders Base */}
-        <path d="M 80 180 Q 150 210 220 180 L 230 280 Q 150 300 70 280 Z" fill="url(#greenGrad)" stroke="#0f5132" strokeWidth="4"/>
+        {/* Rounded rectangle background for P */}
+        <rect x="95" y="70" width="50" height="50" rx="8" fill="none" stroke="#047857" strokeWidth="3"/>
         
-        {/* Neck/Collar detail */}
-        <ellipse cx="150" cy="185" rx="35" ry="15" fill="#16a34a" stroke="#0f5132" strokeWidth="2"/>
+        {/* Body/Shoulders - Darker Green */}
+        <path d="M 60 155 Q 120 175 180 155 L 190 245 Q 120 260 50 245 Z" fill="#065f46" stroke="#1f2937" strokeWidth="3"/>
+        
+        {/* Gray collar detail */}
+        <path d="M 85 160 Q 120 170 155 160" stroke="#9ca3af" strokeWidth="5" fill="none" strokeLinecap="round"/>
       </svg>
       
       {showText && (
