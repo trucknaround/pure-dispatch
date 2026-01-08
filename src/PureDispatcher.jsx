@@ -21,7 +21,8 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
       <img 
         src="https://i.postimg.cc/Z0tN6CBY/1765292235.png"
         alt="Pure Dispatch Logo" 
-        className={`${logoSize} object-contain`}
+        className={`${logoSize} object-contain mix-blend-screen`}
+        style={{ background: 'transparent' }}
       />
       
       {showText && (
