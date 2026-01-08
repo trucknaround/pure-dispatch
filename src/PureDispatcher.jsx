@@ -1,3 +1,37 @@
+// Add this Logo component code at the top of your file
+const Logo = ({ size = 'md', showText = true, className = '' }) => {
+  const sizeMap = {
+    sm: 'w-8 h-8',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-24 h-24'
+  };
+
+  const textSizeMap = {
+    sm: 'text-lg',
+    md: 'text-2xl',
+    lg: 'text-3xl',
+    xl: 'text-4xl'
+  };
+
+  const logoSize = sizeMap[size] || sizeMap.md;
+  const textSize = textSizeMap[size] || textSizeMap.md;
+
+  return (
+    <div className={`flex items-center gap-3 ${className}`}>
+      <img 
+        src="https://i.imgur.com/YOUR_LOGO_HERE.png"
+        alt="Pure Dispatch Logo" 
+        className={`${logoSize} object-contain drop-shadow-lg`}
+      />
+      {showText && (
+        <h1 className={`${textSize} font-bold text-white tracking-wide`}>
+          Pure Dispatch
+        </h1>
+      )}
+    </div>
+  );
+};
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader } from 'lucide-react';
 // NOTE: These files need to be uploaded to your project:
