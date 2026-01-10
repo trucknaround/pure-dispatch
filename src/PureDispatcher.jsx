@@ -1426,12 +1426,7 @@ function PersonalRegistration({ onComplete, existingData }) {
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
           <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-          <div>
-            <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
+ <Logo size="md" showText={true} />
             <p className="text-sm text-gray-400">Personal Information - Step 1 of 2</p>
           </div>
         </div>
@@ -1900,13 +1895,7 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-            <div>
-              <h1 className="text-2xl font-light text-white">Pure Dispatch</h1>
+            <Logo size="md" showText={true} />
               <p className="text-sm text-gray-400">
                 {isEditing ? 'Edit Profile' : 'Carrier Information - Step 2 of 2'}
               </p>
@@ -3682,13 +3671,7 @@ const [isVerifier, setIsVerifier] = useState(false);
         <div className="border-b border-gray-800">
           <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-             <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-              <div>
-                <h1 className="text-2xl font-light text-white">Pure</h1>
+            <Logo size="md" showText={true} />
                 <p className="text-sm text-gray-400">Document Management</p>
               </div>
             </div>
@@ -4062,13 +4045,7 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-4xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-                <div>
-                  <h1 className="text-2xl font-light text-white">Pure Calls</h1>
+               <Logo size="md" showText={true} />
                   <p className="text-sm text-gray-400">Configure AI calling features</p>
                 </div>
               </div>
@@ -4097,7 +4074,8 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="mb-6 bg-gradient-to-r from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-xl p-5">
             <div className="flex items-start gap-3">
               <PhoneCall className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
-              <div>
+
+          <div>
                 <h3 className="text-white font-medium mb-2">What is Pure Calls?</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
                   Pure Calls is an advanced feature that automatically calls you when you don't respond to 
@@ -4222,16 +4200,11 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-                <div>
-                  <h1 className="text-2xl font-light text-white">Pure</h1>
-                  <p className="text-sm text-gray-400">Available Loads</p>
-                </div>
-              </div>
+  <Logo size="md" showText={true} />
+  <div>
+    <p className="text-sm text-gray-400">Available Loads</p>
+  </div>
+</div>
               <button
                 onClick={handleRefreshLoads}
                 disabled={isLoadingLoads}
@@ -4314,16 +4287,11 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-                <div>
-                  <h1 className="text-2xl font-light text-white">Pure</h1>
-                  <p className="text-sm text-gray-400">Load History</p>
-                </div>
-              </div>
+  <Logo size="md" showText={true} />
+  <div>
+    <p className="text-sm text-gray-400">Load History</p>
+  </div>
+</div>
             </div>
             <div className="flex gap-2">
               <button
@@ -4396,17 +4364,12 @@ const [isVerifier, setIsVerifier] = useState(false);
         <div className="border-b border-gray-800">
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-                <div>
-                  <h1 className="text-2xl font-light text-white">Pure</h1>
-                  <p className="text-sm text-gray-400">Favorite Loads</p>
-                </div>
-              </div>
+             <div className="flex items-center gap-3">
+  <Logo size="md" showText={true} />
+  <div>
+    <p className="text-sm text-gray-400">Favorite Loads</p>
+  </div>
+</div>
             </div>
             <div className="flex gap-2">
               <button
@@ -4945,17 +4908,12 @@ const [isVerifier, setIsVerifier] = useState(false);
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <img 
-  src="/pure-dispatch-logo.png" 
-  alt="Pure Dispatch" 
-  className="w-12 h-12 object-contain"
-/>
-              <div>
-                <h1 className="text-2xl font-light text-white">Pure</h1>
-                <p className="text-sm text-gray-400">{carrier?.companyName || 'Carrier'}</p>
-              </div>
-            </div>
+           <div className="flex items-center gap-3">
+  <Logo size="md" showText={true} />
+  <div>
+    <p className="text-sm text-gray-400">{carrier?.companyName || 'Carrier'}</p>
+  </div>
+</div>
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="text-xs text-gray-500">API Usage</p>
