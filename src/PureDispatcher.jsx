@@ -1425,7 +1425,6 @@ function PersonalRegistration({ onComplete, existingData }) {
     <div className="min-h-screen bg-black">
       <div className="border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
-          <img 
  <Logo size="md" showText={true} />
           </div>
             <p className="text-sm text-gray-400">Personal Information - Step 1 of 2</p>
