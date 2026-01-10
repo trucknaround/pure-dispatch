@@ -1427,6 +1427,7 @@ function PersonalRegistration({ onComplete, existingData }) {
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
           <img 
  <Logo size="md" showText={true} />
+          </div>
             <p className="text-sm text-gray-400">Personal Information - Step 1 of 2</p>
           </div>
         </div>
@@ -1896,6 +1897,7 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size="md" showText={true} />
+            </div>
               <p className="text-sm text-gray-400">
                 {isEditing ? 'Edit Profile' : 'Carrier Information - Step 2 of 2'}
               </p>
@@ -3672,6 +3674,7 @@ const [isVerifier, setIsVerifier] = useState(false);
           <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
             <Logo size="md" showText={true} />
+              </div>
                 <p className="text-sm text-gray-400">Document Management</p>
               </div>
             </div>
@@ -4046,6 +4049,7 @@ const [isVerifier, setIsVerifier] = useState(false);
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                <Logo size="md" showText={true} />
+                </div>
                   <p className="text-sm text-gray-400">Configure AI calling features</p>
                 </div>
               </div>
