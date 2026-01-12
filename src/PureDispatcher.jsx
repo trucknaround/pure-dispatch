@@ -1,4 +1,4 @@
-const Logo = ({ size = 'md', showText = true, className = '' }) => {
+`const Logo = ({ size = 'md', showText = true, className = '' }) => {
   const sizeMap = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',
@@ -1424,11 +1424,10 @@ function PersonalRegistration({ onComplete, existingData }) {
   return (
     <div className="min-h-screen bg-black">
       <div className="border-b border-gray-800">
-        <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
- <Logo size="md" showText={true} />
-          </div>
-            <p className="text-sm text-gray-400">Personal Information - Step 1 of 2</p>
-          </div>
+  <div className="max-w-4xl mx-auto px-6 py-6 flex items-center gap-3">
+        <Logo size="md" showText={true} />
+        <div>
+          <p className="text-sm text-gray-400">Personal Information - Step 1 of 2</p>
         </div>
       </div>
 
