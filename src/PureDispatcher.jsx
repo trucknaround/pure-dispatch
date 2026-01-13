@@ -1,4 +1,4 @@
-`const Logo = ({ size = 'md', showText = true, className = '' }) => {
+const Logo = ({ size = 'md', showText = true, className = '' }) => {
   const sizeMap = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',
@@ -17,7 +17,7 @@
   const textSize = textSizeMap[size] || textSizeMap.md;
 
   return (
-   <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-3 ${className}`}>
       <img 
         src="https://i.postimg.cc/g0VG0rdv/1765292235-removebg-preview.png"
         alt="Pure Dispatch Logo" 
