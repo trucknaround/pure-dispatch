@@ -4044,33 +4044,34 @@ const [isVerifier, setIsVerifier] = useState(false);
       <div className="min-h-screen bg-black">
         <div className="border-b border-gray-800">
           <div className="max-w-4xl mx-auto px-6 py-6">
-            <div className="flex items-center justify-between mb-4">
+           <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-               <Logo size="md" showText={true} />
-                </div>
+                <Logo size="md" showText={true} />
+                <div>
                   <p className="text-sm text-gray-400">Configure AI calling features</p>
                 </div>
               </div>
-              <button
-                onClick={() => setCurrentView('home')}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Back to Chat
-              </button>
-              {isVerifier && (
-  <button
-    onClick={() => setShowVerificationDashboard(true)}
-    className="px-4 py-2 rounded-lg bg-purple-900/30 border border-purple-500/30 text-purple-400 hover:bg-purple-900/50 transition-colors flex items-center gap-2"
-  >
-    <Shield className="w-4 h-4" />
-    Verify Loads
-  </button>
-)}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentView('home')}
+                  className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Back to Chat
+                </button>
+                {isVerifier && (
+                  <button
+                    onClick={() => setShowVerificationDashboard(true)}
+                    className="px-4 py-2 rounded-lg bg-purple-900/30 border border-purple-500/30 text-purple-400 hover:bg-purple-900/50 transition-colors flex items-center gap-2"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Verify Loads
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-
         <div className="max-w-4xl mx-auto px-6 py-6">
           {/* INFO BANNER */}
           <div className="mb-6 bg-gradient-to-r from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-xl p-5">
