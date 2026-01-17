@@ -3975,7 +3975,7 @@ const [isVerifier, setIsVerifier] = useState(false);
               <div className="space-y-4">
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Name</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.company_Name || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.company_name || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Company Number</label>
@@ -3983,11 +3983,11 @@ const [isVerifier, setIsVerifier] = useState(false);
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>DOT Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dot_Number || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.dot_number || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>MC Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mc_Number || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.mc_number || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>EIN</label>
