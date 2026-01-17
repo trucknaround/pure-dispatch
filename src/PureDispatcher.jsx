@@ -3342,7 +3342,7 @@ setCarrier(freshCarrier);
         setIsTyping(false);
         return;
       }
-      
+      }
       // Nearby fuel stations
       if (lowerInput.includes('fuel') || lowerInput.includes('gas') || lowerInput.includes('diesel')) {
         if (location) {
