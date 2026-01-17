@@ -108,7 +108,7 @@ const forceSpeak = async (text, onStart, onEnd) => {
     const apiUrl = `${BACKEND_URL}/api/speak`;
     console.log('🎤 API URL:', apiUrl);
     
-    const response = await fetch(apiUrl, {
+    const response = await fetch(`apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -412,7 +412,7 @@ const findNearbyServices = async (latitude, longitude, radiusMiles = 25, type = 
         query = `[out:json];node[amenity=fuel](around:${radiusMeters},${latitude},${longitude});out;`;
     }
     
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
+    const response = await fetch(`https://overpass-api.de/api/interpreter', {
       method: 'POST',
       body: query
     });
@@ -1769,7 +1769,7 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
     setVerificationSuccess(false);
 
     try {
-      const response = await fetch('/api/verify-carrier', {
+      const response = await fetch(`/api/verify-carrier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1861,7 +1861,7 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
   
   const authToken = localStorage.getItem('authToken');
   
-  const response = await fetch(apiEndpoint, {
+  const response = await fetch(`apiEndpoint, {
     method: method,
     headers: { 
       'Content-Type': 'application/json',
@@ -2692,7 +2692,7 @@ useEffect(() => {
     if (isRegistered && !showDashboard && currentView === 'home' && messages.length === 0 && audioEnabled) {
       const timer = setTimeout(() => {
         const welcomeText = `Hey there, driver! I'm Pure, your AI dispatch assistant. I'm here to help you with fuel, weather, loads, and everything you need on the road. What can I do for you?`;
-        forceSpeak(welcomeText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        forceSpeak(`welcomeText, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }, 1000);
       return () => clearTimeout(timer);
     }
@@ -2842,7 +2842,7 @@ setCarrier(freshCarrier);
     /*
     setTimeout(() => {
       const welcomeText = `Hey there! I'm Pure, your AI dispatcher. Welcome aboard, ${personalData?.name || 'driver'}! I'm here to help you find fuel, check weather, book loads, and handle everything you need on the road. Just ask me anything!`;
-      forceSpeak(welcomeText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+      forceSpeak(`welcomeText, () => setIsSpeaking(true), () => setIsSpeaking(false));
     }, 1000);
     */
   };
@@ -2856,7 +2856,7 @@ setCarrier(freshCarrier);
     if (view === 'home' && messages.length === 0) {
       setTimeout(() => {
         const greetingText = `Hey there, driver! I'm Pure, your AI dispatch assistant. I'm here to help you with loads, fuel, weather, and everything you need on the road. What can I do for you today?`;
-        forceSpeak(greetingText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        forceSpeak(`greetingText, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }, 500);
     }
   };
@@ -2961,7 +2961,7 @@ setCarrier(freshCarrier);
       
       // Voice confirmation
       const confirmMsg = "GPS tracking enabled! I'll help you navigate and keep the broker updated on your ETA.";
-      forceSpeak(confirmMsg, () => setIsSpeaking(true), () => setIsSpeaking(false));
+      forceSpeak(`confirmMsg, () => setIsSpeaking(true), () => setIsSpeaking(false));
     }
   };
 
@@ -2982,7 +2982,7 @@ setCarrier(freshCarrier);
       
       // Voice confirmation
       const confirmMsg = "GPS tracking stopped. Your privacy is important to me!";
-      forceSpeak(confirmMsg, () => setIsSpeaking(true), () => setIsSpeaking(false));
+      forceSpeak(`confirmMsg, () => setIsSpeaking(true), () => setIsSpeaking(false));
     }
   };
 
@@ -3149,7 +3149,7 @@ setCarrier(freshCarrier);
       setMessages(prev => [...prev, confirmMessage]);
 
       if (audioEnabled) {
-        forceSpeak(confirmMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        forceSpeak(`confirmMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }
 
       setPodFiles([]);
@@ -3258,7 +3258,7 @@ setCarrier(freshCarrier);
       console.log(`📊 Tracking message with ${priority} priority:`, trackedMessageId);
 
       if (audioEnabled) {
-        await forceSpeak(data.response, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        await forceSpeak(`data.response, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }
     } catch (err) {
       // Mock responses with GPS integration
@@ -3320,7 +3320,7 @@ setCarrier(freshCarrier);
           };
           setMessages(prev => [...prev, pureMessage]);
           if (audioEnabled) {
-            await forceSpeak(responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+            await forceSpeak(`responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
           }
         } else if (!location) {
           const pureMessage = {
@@ -3444,7 +3444,7 @@ setCarrier(freshCarrier);
         };
         setMessages(prev => [...prev, pureMessage]);
         if (audioEnabled) {
-          await forceSpeak(responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+          await forceSpeak(`responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
         }
         setIsTyping(false);
         return;
@@ -3484,7 +3484,7 @@ setCarrier(freshCarrier);
       setMessages(prev => [...prev, pureMessage]);
 
       if (audioEnabled) {
-        await forceSpeak(responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        await forceSpeak(`responseText, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }
     } finally {
       setIsTyping(false);
@@ -3540,7 +3540,7 @@ setCarrier(freshCarrier);
       setMessages(prev => [...prev, confirmMessage]);
 
       if (audioEnabled) {
-        await forceSpeak(confirmMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        await forceSpeak(`confirmMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }
     } catch (err) {
       const errorMessage = {
@@ -3553,7 +3553,7 @@ setCarrier(freshCarrier);
       setMessages(prev => [...prev, errorMessage]);
       
       if (audioEnabled) {
-        forceSpeak(errorMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        forceSpeak(`errorMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }
     }
   };
@@ -3576,7 +3576,7 @@ setCarrier(freshCarrier);
     setMessages(prev => [...prev, confirmMessage]);
     
     if (audioEnabled) {
-      forceSpeak(confirmMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+      forceSpeak(`confirmMessage.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
     }
   };
 
