@@ -3118,9 +3118,7 @@ setCarrier(freshCarrier);
   const handleSubmitPOD = async () => {
     if (podFiles.length === 0) {
       alert('Please upload at least one file (BOL or picture)');
-      const [showVerificationDashboard, setShowVerificationDashboard] = useState(false);
-const [isVerifier, setIsVerifier] = useState(false);
-
+     
       return;
     }
 
