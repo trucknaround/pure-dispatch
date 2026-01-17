@@ -3943,7 +3943,7 @@ const [isVerifier, setIsVerifier] = useState(false);
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.personalPhone || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.personalphone || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Address</label>
@@ -3995,11 +3995,11 @@ const [isVerifier, setIsVerifier] = useState(false);
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Number of Trucks</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.numberOfTrucks || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.numberOftrucks || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Equipment Types</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.equipmentTypes?.join(', ') || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.equipmenttypes?.join(', ') || 'N/A'}</p>
                 </div>
               </div>
             </div>
