@@ -2425,6 +2425,19 @@ export default function PureDispatcher() {
   const messagesEndRef = useRef(null);
   const profileMenuRef = useRef(null);
   const recognitionRef = useRef(null);
+  // Load carrier data from localStorage on mount
+useEffect(() => {
+  const savedCarrier = localStorage.getItem('pureCarrier');
+  if (savedCarrier) {
+    try {
+      const carrierData = JSON.parse(savedCarrier);
+      console.log('✅ Loaded carrier from localStorage:', carrierData);
+      setCarrier(carrierData);
+    } catch (error) {
+      console.error('❌ Error parsing carrier data:', error);
+    }
+  }
+}, []);
 
   // =====================================================
   // PURE CALLS - HELPER FUNCTIONS
