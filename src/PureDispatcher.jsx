@@ -2796,17 +2796,21 @@ useEffect(() => {
   const handleRegistrationComplete = (carrierData) => {
     // If editing profile, merge with existing carrier data
     // If new registration, merge with personal data
-    const completeData = currentView === 'profile-edit' 
-      ? {
-          ...carrier, // Keep existing carrier data
-          ...carrierData, // Update with new carrier info
-        }
-      : {
-          ...personalData, // New registration: use personal data
-          personalPhone: personalData?.phone || '', // Save personal phone separately
-          ...carrierData, // Add carrier data
-        };
-    
+   const completeData = currentView === 'profile-edit' 
+  ? {
+      ...carrier,
+      ...carrierData,
+    }
+  : {
+      ...personalData,
+      personalPhone: personalData?.phone || '',
+      ...carrierData,
+    };
+
+// Create a completely new object to force React re-render
+const freshCarrier = JSON.parse(JSON.stringify(completeData));
+
+setCarrier(freshCarrier);
     setCarrier(completeData);
     setIsRegistered(true);
     localStorage.setItem('pureCarrier', JSON.stringify(completeData));
