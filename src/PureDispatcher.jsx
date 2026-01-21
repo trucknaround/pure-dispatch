@@ -2813,9 +2813,8 @@ useEffect(() => {
 const freshCarrier = JSON.parse(JSON.stringify(completeData));
 
 setCarrier(freshCarrier);
-    setCarrier(completeData);
-    setIsRegistered(true);
-    localStorage.setItem('pureCarrier', JSON.stringify(completeData));
+setIsRegistered(true);
+localStorage.setItem('pureCarrier', JSON.stringify(freshCarrier));
     localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
     
     // If editing profile, go back to profile view
