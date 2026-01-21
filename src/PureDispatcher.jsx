@@ -1854,9 +1854,9 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
 
    try {
   // Use different endpoints for create vs update
-  const apiEndpoint = isEditing 
-    ? `${BACKEND_URL}/api/auth/update-carrier`
-    : `${BACKEND_URL}/api/carriers/register`;
+ const apiEndpoint = isEditing 
+  ? `${BACKEND_URL}/api/profile/update`
+  : `${BACKEND_URL}/api/carriers/register`;
   
   const method = isEditing ? 'PUT' : 'POST';
   
