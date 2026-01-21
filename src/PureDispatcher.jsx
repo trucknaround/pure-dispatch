@@ -121,7 +121,7 @@ const forceSpeak = async (text, onStart, onEnd) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("🎤 API Error:", response.status, errorText);
-      throw new Error(`Backend returned ${response.status}: ${errorText}`);
+      throw new Error("Backend error: " + response.status);
   }
     const data = await response.json();
     console.log('🎤 API Response received:', data.success ? 'Success' : 'Failed');
