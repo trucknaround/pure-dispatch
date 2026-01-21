@@ -1852,26 +1852,38 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
 
     setIsSubmitting(true);
 
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/carriers/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          ...personalInfo,
-          mcVerified,
-          dotVerified
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        onRegistrationComplete(data.carrier);
-      } else {
-        setError(data.error || 'Registration failed');
-      }
-    } catch (err) {
+   try {
+  // Use different endpoints for create vs update
+  const apiEndpoint = isEditing 
+    ? `${BACKEND_URL}/api/auth/update-carrier`
+    : `${BACKEND_URL}/api/carriers/register`;
+  
+  const method = isEditing ? 'PUT' : 'POST';
+  
+  const authToken = localStorage.getItem('authToken');
+  
+  const response = await fetch(apiEndpoint, {
+    method: method,
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`
+    },
+    body: JSON.stringify({
+      ...formData,
+      ...personalInfo,
+      mcVerified,
+      dotVerified
+    })
+  });
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    onRegistrationComplete(data.carrier);
+  } else {
+    setError(data.error || (isEditing ? 'Update failed' : 'Registration failed'));
+  }
+} catch (err) {
       const mockCarrier = {
         id: carrier?.id || `carrier_${Date.now()}`,
         ...formData,
