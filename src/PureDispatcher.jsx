@@ -373,7 +373,7 @@ const calculateETA = (currentLat, currentLon, destLat, destLon, avgSpeedMph = 55
 
 // Format location for display
 const formatLocation = (lat, lon) => {
- return (`${lat.toFixed(4)}°, ${lon.toFixed(4)}°`);
+ return (lat.toFixed(4) + "°, " + lon.toFixed(4) + "°");
 };
 
 // Convert speed from m/s to mph
