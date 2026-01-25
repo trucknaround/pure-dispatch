@@ -4480,7 +4480,7 @@ const [isVerifier, setIsVerifier] = useState(false);
                 </div>
                 <div>
                   <h1 className={`text-2xl font-light ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Earnings Analytics</h1>
-                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>{carrier?.companyName || 'Carrier'}</p>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>{carrier?.company_name || carrier?.companyName || 'Carrier'}</p>
                 </div>
               </div>
               <button
@@ -4943,7 +4943,7 @@ const [isVerifier, setIsVerifier] = useState(false);
            <div className="flex items-center gap-3">
   <Logo size="md" showText={true} />
   <div>
-    <p className="text-sm text-gray-400">{carrier?.companyName || 'Carrier'}</p>
+    <p className="text-sm text-gray-400">{carrier?.company_name || carrier?.companyName || 'Carrier'}</p>
   </div>
 </div>
             <div className="flex items-center gap-3">
