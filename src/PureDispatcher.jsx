@@ -1715,7 +1715,9 @@ const [formData, setFormData] = useState({
   phone: carrier?.phone || '',
   ein: carrier?.ein || '',
   numberOfTrucks: carrier?.number_of_trucks || carrier?.numberOfTrucks || '',
-  equipmentTypes: carrier?.equipment_types || carrier?.equipmentTypes || [],
+  equipmentTypes: Array.isArray(carrier?.equipment_types) ? carrier.equipment_types : (carrier?.equipmentTypes || []),
+trailerSizes: Array.isArray(carrier?.trailer_sizes) ? carrier.trailer_sizes : (carrier?.trailerSizes || []),
+operatingRegions: Array.isArray(carrier?.operating_regions) ? carrier.operating_regions : (carrier?.operatingRegions || [])
   });
 
   // Verification State
