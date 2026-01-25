@@ -145,6 +145,23 @@ if (phone) userUpdate.personal_phone = phone;
     if (equipmentTypes) carrierUpdate.equipment_types = equipmentTypes;
     if (mcNumber) carrierUpdate.mc_number = mcNumber;
     if (dotNumber) carrierUpdate.dot_number = dotNumber;
+    // Personal info goes in carriers table too
+if (fullName) carrierUpdate.contact_person = fullName;
+if (address) carrierUpdate.address = address;
+if (city) carrierUpdate.city = city;
+if (state) carrierUpdate.state = state;
+if (zipCode) carrierUpdate.zip = zipCode;
+
+// Phone - check both possible field names
+const phoneValue = phone || personalInfo?.personalPhone;
+if (phoneValue) {
+  carrierUpdate.phone = phoneValue;
+  // Also update users.personal_phone if it exists
+  await supabase
+    .from('users')
+    .update({ personal_phone: phoneValue })
+    .eq('id', userId);
+}
 
     // NEW: Handle verification flags
     if (mcVerified !== undefined) {
