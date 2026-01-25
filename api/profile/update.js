@@ -94,7 +94,8 @@ export default async function handler(req, res) {
     if (personalInfo?.email) userUpdate.email = personalInfo.email;
     // New format
     if (email) userUpdate.email = email;
-    if (fullName) userUpdate.full_name = fullName;
+if (phone) userUpdate.personal_phone = phone;
+// Don't update full_name - it doesn't exist in users table
     
     // Handle password change
     if (newPassword && newPassword.length >= 8) {
