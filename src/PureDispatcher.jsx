@@ -1699,26 +1699,23 @@ function CarrierRegistration({ onRegistrationComplete, carrier, isEditing = fals
   
   // Personal Information State
   const [personalInfo, setPersonalInfo] = useState({
-    fullName: carrier?.fullName || '',
-    email: carrier?.email || '',
-    personalPhone: carrier?.personalPhone || '',
-    address: carrier?.address || '',
-    city: carrier?.city || '',
-    state: carrier?.state || '',
-    zipCode: carrier?.zipCode || ''
-  });
+  fullName: carrier?.contact_person || carrier?.fullName || '',
+  email: carrier?.email || '',
+  personalPhone: carrier?.phone || carrier?.personal_phone || '',
+  address: carrier?.address || '',
+  city: carrier?.city || '',
+  state: carrier?.state || '',
+  zipCode: carrier?.zip || carrier?.zipCode || ''
+});
 
-  // Company Information State
-  const [formData, setFormData] = useState({
-    companyName: carrier?.companyName || '',
-    mcNumber: carrier?.mcNumber || '',
-    dotNumber: carrier?.dotNumber || '',
-    phone: carrier?.phone || '',
-    ein: carrier?.ein || '',
-    numberOfTrucks: carrier?.numberOfTrucks || '',
-    equipmentTypes: carrier?.equipmentTypes || [],
-    trailerSizes: carrier?.trailerSizes || [],
-    operatingRegions: carrier?.operatingRegions || []
+const [formData, setFormData] = useState({
+  companyName: carrier?.company_name || carrier?.companyName || '',
+  mcNumber: carrier?.mc_number || carrier?.mcNumber || '',
+  dotNumber: carrier?.dot_number || carrier?.dotNumber || '',
+  phone: carrier?.phone || '',
+  ein: carrier?.ein || '',
+  numberOfTrucks: carrier?.number_of_trucks || carrier?.numberOfTrucks || '',
+  equipmentTypes: carrier?.equipment_types || carrier?.equipmentTypes || [],
   });
 
   // Verification State
