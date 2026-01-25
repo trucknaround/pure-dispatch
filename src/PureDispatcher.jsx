@@ -3952,15 +3952,15 @@ const [isVerifier, setIsVerifier] = useState(false);
               <div className="space-y-4">
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Full Name</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{user?.full_name || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.contact_person || carrier?.full_name || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Email Address</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{user?.email || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{user?.email || carrier?.email || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Phone Number</label>
-                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.personalphone || 'N/A'}</p>
+                  <p className={`${theme === 'light' ? 'text-gray-900' : 'text-white'} font-medium`}>{carrier?.phone || carrier?.personal_phone || 'N/A'}</p>
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'} block mb-1`}>Address</label>
