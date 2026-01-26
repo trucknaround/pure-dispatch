@@ -70,17 +70,17 @@ export default async function handler(req, res) {
     // STORE RESET TOKEN IN DATABASE
     // ============================================
 
-    const { error: tokenError } = await supabase
-      .from('password_resets')
-      .insert([
-        {
-          user_id: user.id,
-          token_hash: resetTokenHash,
-          expires_at: expiresAt.toISOString(),
-          used: false,
-          created_at: new Date().toISOString()
-        }
-      ]);
+   const { error: tokenError } = await supabase
+  .from('password_resets')
+  .insert([
+    {
+      user_id: user.id,
+      email: email.toLowerCase(),
+      token: resetTokenHash,
+      expires_at: expiresAt.toISOString(),
+      created_at: new Date().toISOString()
+    }
+  ]);
 
     if (tokenError) {
       console.error('❌ Failed to store reset token:', tokenError);
