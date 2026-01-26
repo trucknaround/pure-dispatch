@@ -24,8 +24,8 @@ export default async function handler(req, res) {
 
     // FMCSA API endpoint
     const fmcsaUrl = mcNumber 
-      ? `https://mobile.fmcsa.dot.gov/qc/services/carriers/${mcNumber}?webKey=YOUR_FMCSA_API_KEY`
-      : `https://mobile.fmcsa.dot.gov/qc/services/carriers/docket-number/${dotNumber}?webKey=YOUR_FMCSA_API_KEY`;
+      ? `https://mobile.fmcsa.dot.gov/qc/services/carriers/${mcNumber}?webKey=${process.env.FMCSA_API_KEY}`
+      : `https://mobile.fmcsa.dot.gov/qc/services/carriers/docket-number/${dotNumber}?webKey=${process.env.FMCSA_API_KEY}`;
 
     const response = await fetch(fmcsaUrl, {
       method: 'GET',
