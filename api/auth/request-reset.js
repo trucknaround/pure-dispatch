@@ -127,9 +127,10 @@ The Pure Dispatch Team
     console.log('✅ Password reset email sent to:', email);
 
     return res.status(200).json({
-      success: true,
-      message: 'Password reset email sent'
-    });
+  success: true,
+  message: 'Password reset email sent',
+  emailSent: true
+});
 
   } catch (error) {
     console.error('❌ Password reset error:', error);
