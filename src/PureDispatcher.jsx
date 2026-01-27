@@ -801,9 +801,23 @@ const handlePasswordReset = async (e) => {
 };
 
   // Check URL for reset token on mount
+  // Check URL for reset token on mount
   useEffect(() => {
+    // First check sessionStorage for pending reset
+    const pending = sessionStorage.getItem('pendingPasswordReset');
+    if (pending) {
+      const { resetToken: token, email: emailParam } = JSON.parse(pending);
+      sessionStorage.removeItem('pendingPasswordReset');
+      
+      setShowResetPassword(true);
+      setResetToken(token);
+      setResetEmailFromUrl(emailParam);
+      return;
+    }
+    
+    // Then check URL
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('resettoken');
+    const token = urlParams.get('resetToken');
     const emailParam = urlParams.get('email');
     
     if (token && emailParam) {
