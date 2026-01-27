@@ -727,7 +727,7 @@ const handleForgotPassword = async (e) => {
   setIsLoading(true);
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+    const response = await fetch(`${BACKEND_URL}/api/auth/request-reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: resetEmail })
@@ -803,7 +803,7 @@ const handlePasswordReset = async (e) => {
   // Check URL for reset token on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    const token = urlParams.get('resettoken');
     const emailParam = urlParams.get('email');
     
     if (token && emailParam) {
