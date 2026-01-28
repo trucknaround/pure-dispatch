@@ -4746,7 +4746,7 @@ const [isVerifier, setIsVerifier] = useState(false);
               </div>
             </div>
           </div>
-
+          </div>
           {/* Notifications */}
           <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
             <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
