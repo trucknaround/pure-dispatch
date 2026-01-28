@@ -4693,7 +4693,8 @@ const [isVerifier, setIsVerifier] = useState(false);
             </div>
             <div className="p-6 space-y-4">
               {/* Theme Toggle */}
-             
+             </div>
+          </div>
           {/* Voice Settings */}
           <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
             <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
@@ -5242,5 +5243,6 @@ const [isVerifier, setIsVerifier] = useState(false);
       </div>
     </div>
    </div>
+  </div>
   );
 }
