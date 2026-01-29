@@ -13,7 +13,17 @@
     padding: 0;
   }
   
-  /* Hide theme toggle - targets the "Theme" row inside Appearance section */
+  html {
+    background-color: #000000;
+    overflow-x: hidden;
+  }
+  
+  #root {
+    background-color: #000000;
+    min-height: 100vh;
+  }
+  
+  /* Hide theme toggle */
   .bg-gray-900 .p-6.space-y-4 > .flex.items-center.justify-between:first-child {
     display: none !important;
   }
