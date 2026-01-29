@@ -11,8 +11,10 @@
     overflow-x: hidden;
     margin: 0;
     padding: 0;
-    /* Hide theme toggle in Settings */
-  [class*="Appearance"] + div > div:first-child {
+  }
+  
+  /* Hide theme toggle - targets the "Theme" row inside Appearance section */
+  .bg-gray-900 .p-6.space-y-4 > .flex.items-center.justify-between:first-child {
     display: none !important;
   }
 </style>
