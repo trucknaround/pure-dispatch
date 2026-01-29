@@ -1,4 +1,5 @@
 
+
 const Logo = ({ size = 'md', showText = true, className = '' }) => {
   const sizeMap = {
     sm: 'w-8 h-8',
@@ -4648,7 +4649,7 @@ const [isVerifier, setIsVerifier] = useState(false);
           )}
         </div>
       </div>
-    )}
+    );
   }
 
   // =====================================================
@@ -4693,8 +4694,33 @@ const [isVerifier, setIsVerifier] = useState(false);
             </div>
             <div className="p-6 space-y-4">
               {/* Theme Toggle */}
-             </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Theme</p>
+                  <p className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
+                    {theme === 'light' ? 'Light mode' : 'Dark mode'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newTheme = theme === 'dark' ? 'light' : 'dark';
+                    setTheme(newTheme);
+                    localStorage.setItem('pureTheme', newTheme);
+                  }}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    theme === 'dark' ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      theme === 'dark' ? 'transform translate-x-6' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
+
           {/* Voice Settings */}
           <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
             <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
@@ -4747,7 +4773,7 @@ const [isVerifier, setIsVerifier] = useState(false);
               </div>
             </div>
           </div>
-          </div>
+
           {/* Notifications */}
           <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
             <div className={`p-6 border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'}`}>
@@ -5242,7 +5268,5 @@ const [isVerifier, setIsVerifier] = useState(false);
         </div>
       </div>
     </div>
-   </div>
-  </div>
   );
 }
