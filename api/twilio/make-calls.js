@@ -67,9 +67,9 @@ export default async function handler(req, res) {
           To: formattedPhone,
           From: TWILIO_PHONE_NUMBER,
           // TwiML URL - will play the generated audio
-          Url: `${process.env.VERCEL_URL || req.headers.host}/api/twilio/generate-twiml?messageId=${messageId || 'default'}&text=${encodeURIComponent(messageText)}`,
+          Url: `https://${process.env.VERCEL_URL || req.headers.host}/api/twilio/generate-twiml?messageId=${messageId || 'default'}&text=${encodeURIComponent(messageText)}`,
           // Status callback to track call status
-          StatusCallback: `${process.env.VERCEL_URL || req.headers.host}/api/twilio/call-status`,
+          StatusCallback: `https://${process.env.VERCEL_URL || req.headers.host}/api/twilio/call-status`,
           StatusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
           StatusCallbackMethod: 'POST'
         })
