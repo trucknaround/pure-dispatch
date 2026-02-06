@@ -3967,6 +3967,95 @@ const [isVerifier, setIsVerifier] = useState(false);
   // =====================================================
   // PROFILE VIEW
   // =====================================================
+  // =====================================================
+  // SUBSCRIBE PAGE
+  // =====================================================
+  
+  if (currentView === 'subscribe') {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-gray-900 rounded-2xl border border-cyan-500/30 p-8 shadow-2xl">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Logo size="lg" />
+          </div>
+
+          <h1 className="text-3xl font-bold text-cyan-400 mb-2 text-center">Subscribe to Pure Dispatch</h1>
+          <p className="text-gray-300 mb-6 text-center">
+            Get access to your AI-powered virtual dispatcher
+          </p>
+          
+          <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-cyan-500/20">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-lg text-white">Monthly Plan</span>
+              <span className="text-3xl font-bold text-cyan-400">$39.99</span>
+            </div>
+            <ul className="space-y-3 text-gray-300 text-sm">
+              <li className="flex items-start">
+                <span className="text-cyan-400 mr-2">✓</span>
+                <span>24/7 AI dispatcher access</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-cyan-400 mr-2">✓</span>
+                <span>Load verification system</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-cyan-400 mr-2">✓</span>
+                <span>Real-time freight matching</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-cyan-400 mr-2">✓</span>
+                <span>Route optimization</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-cyan-400 mr-2">✓</span>
+                <span>Fraud protection</span>
+              </li>
+            </ul>
+          </div>
+
+          <button
+            onClick={async () => {
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                  alert('Please log in first');
+                  return;
+                }
+
+                const response = await fetch('https://pure-dispatch-landing.vercel.app/api/create-checkout-session', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+
+                const data = await response.json();
+                
+                if (data.url) {
+                  window.location.href = data.url;
+                } else {
+                  alert('Failed to create checkout session');
+                }
+              } catch (error) {
+                console.error('Checkout error:', error);
+                alert('Something went wrong. Please try again.');
+              }
+            }}
+            className="w-full bg-gradient-to-r from-cyan-500 to-green-500 hover:from-cyan-600 hover:to-green-600 text-black font-bold py-3 rounded-lg transition-all shadow-lg"
+          >
+            Subscribe Now
+          </button>
+
+          <p className="text-gray-400 text-xs text-center mt-4">
+            Secure payment powered by Stripe
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (currentView === 'profile') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'}`}>
