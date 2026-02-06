@@ -2410,7 +2410,7 @@ export default function PureDispatcher() {
   const [gpsSpeed, setGpsSpeed] = useState(null);
   const [nearbyServices, setNearbyServices] = useState([]);
   const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
-  const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
+
   
   // Subscription state
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
