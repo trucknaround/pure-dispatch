@@ -2412,8 +2412,7 @@ export default function PureDispatcher() {
   const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
 
   
-  // Subscription state
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  
   
   // Check subscription status
   const checkSubscription = async () => {
