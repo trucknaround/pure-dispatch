@@ -2411,8 +2411,6 @@ export default function PureDispatcher() {
   const [nearbyServices, setNearbyServices] = useState([]);
   const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
 
-  
-  
   // Check subscription status
   const checkSubscription = async () => {
     try {
@@ -2444,7 +2442,6 @@ export default function PureDispatcher() {
       setCurrentView('home'); // Fallback to home on error
     }
   };
-
   const gpsWatchIdRef = useRef(null);
   const gpsDebounceRef = useRef(null);
   const lastLocationRef = useRef(null);
