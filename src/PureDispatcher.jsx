@@ -2374,6 +2374,37 @@ export default function PureDispatcher() {
         const [user, setUser] = useState(null);
   const [currentView, setCurrentView] = useState('home');
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  // Check subscription status
+  const checkSubscription = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setCurrentView('login');
+        return;
+      }
+
+      // Call the /api/me endpoint from your landing page
+      const response = await fetch('https://pure-dispatch-landing.vercel.app/api/me', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const userData = await response.json();
+      setSubscriptionStatus(userData.subscription_status);
+
+      // If no active subscription, redirect to subscribe page
+      if (userData.subscription_status !== 'active') {
+        setCurrentView('subscribe');
+      } else {
+        setCurrentView('home');
+      }
+    } catch (error) {
+      console.error('Subscription check error:', error);
+      setCurrentView('home'); // Fallback to home on error
+    }
+  };
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -2411,37 +2442,7 @@ export default function PureDispatcher() {
   const [nearbyServices, setNearbyServices] = useState([]);
   const [currentLoad, setCurrentLoad] = useState(null); // Active load with destination
 
-  // Check subscription status
-  const checkSubscription = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setCurrentView('login');
-        return;
-      }
-
-      // Call the /api/me endpoint from your landing page
-      const response = await fetch('https://pure-dispatch-landing.vercel.app/api/me', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
-
-      const userData = await response.json();
-      setSubscriptionStatus(userData.subscription_status);
-
-      // If no active subscription, redirect to subscribe page
-      if (userData.subscription_status !== 'active') {
-        setCurrentView('subscribe');
-      } else {
-        setCurrentView('home');
-      }
-    } catch (error) {
-      console.error('Subscription check error:', error);
-      setCurrentView('home'); // Fallback to home on error
-    }
-  };
+ 
   const gpsWatchIdRef = useRef(null);
   const gpsDebounceRef = useRef(null);
   const lastLocationRef = useRef(null);
