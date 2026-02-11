@@ -34,6 +34,7 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
   );
 };
 import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from './supabaseClient';
 import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader } from 'lucide-react';
 // NOTE: These files need to be uploaded to your project:
         import VerificationDashboard from './VerificationDashboard';
