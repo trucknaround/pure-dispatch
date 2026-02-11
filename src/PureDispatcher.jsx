@@ -1,5 +1,4 @@
 
-
 const Logo = ({ size = 'md', showText = true, className = '' }) => {
   const sizeMap = {
     sm: 'w-8 h-8',
@@ -894,10 +893,10 @@ const handlePasswordReset = async (e) => {
       // Cache carrier data
       localStorage.setItem('pureCarrier', JSON.stringify(carrierData.carrier));
       
-      await checkSubscription();
-    } else {
+      onLogin(carrierData.carrier);
+      } else {
       console.log('📝 No carrier data - new registration needed');
-     await checkSubscription();
+     onLogin({ isNewUser: true });
     }
       console.error('❌ Password reset error:', error);
       setError('Failed to reset password. Please try again.');
@@ -2823,26 +2822,31 @@ useEffect(() => {
   };
 
   const handleLogin = (data) => {
-    if (data && data.isNewUser) {
-      // New user - start registration flow
-      setIsLoggedIn(true);
-      setRegistrationStep('personal');
-      localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
-    } else if (data) {
-      // Existing user - load their data
-      setCarrier(data);
-      setIsRegistered(true);
-      setIsLoggedIn(true);
-      setShowDashboard(true);
-      setRegistrationStep('none');
-      localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
-    } else {
-      // Fallback - start registration
-      setIsLoggedIn(true);
-      setRegistrationStep('personal');
-      localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
-    }
-  };
+  if (data && data.isNewUser) {
+    // New user - start registration flow
+    setIsLoggedIn(true);
+    setRegistrationStep('personal');
+    localStorage.setItem('pureActiveSession', 'true');
+    // Check subscription for new users
+    checkSubscription();
+  } else if (data) {
+    // Existing user - load their data
+    setCarrier(data);
+    setIsRegistered(true);
+    setIsLoggedIn(true);
+    setShowDashboard(true);
+    setRegistrationStep('none');
+    localStorage.setItem('pureActiveSession', 'true');
+    // Check subscription for existing users
+    checkSubscription();
+  } else {
+    // Fallback - start registration
+    setIsLoggedIn(true);
+    setRegistrationStep('personal');
+    localStorage.setItem('pureActiveSession', 'true');
+    checkSubscription();
+  }
+};
 
   const handlePersonalRegistrationComplete = (data) => {
     setPersonalData(data);
