@@ -2403,11 +2403,6 @@ const checkSubscription = async () => {
     setCurrentView('home');
   }
 };
-    } catch (error) {
-      console.error('Subscription check error:', error);
-      setCurrentView('home'); // Fallback to home on error
-    }
-  };
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
