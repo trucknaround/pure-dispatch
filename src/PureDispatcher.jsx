@@ -3263,7 +3263,7 @@ const [isVerifier, setIsVerifier] = useState(false);
       
       const pureMessage = {
         from: 'pure',
-        text: data.response,
+      text: data.text,
         timestamp: new Date(),
         mood: data.mood || 'neutral',
         skill: data.skill || null,
@@ -3278,7 +3278,7 @@ const [isVerifier, setIsVerifier] = useState(false);
       // HIGH priority keywords (will trigger call after 5 min)
       const highPriorityKeywords = ['urgent', 'immediately', 'asap', 'hot load', 'expires in', 'time sensitive'];
       const isHighPriority = highPriorityKeywords.some(keyword => 
-        data.response.toLowerCase().includes(keyword)
+       (data.text || '').toLowerCase().includes(keyword)
       );
       
       if (isHighPriority || data.meta?.urgent === true) {
