@@ -55,7 +55,7 @@ import CallSettingsPanel from './components/CallSettingsPanel';
 // Backend URL
 const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:8080'
-  : '';
+  : 'https://load-verification-agent.vercel.app';
 
 // =====================================================
 // ELEVENLABS VOICE - PURE'S AI VOICE
