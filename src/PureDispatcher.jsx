@@ -888,19 +888,20 @@ const handlePasswordReset = async (e) => {
     });
 
     if (carrierResponse.ok) {
-      const carrierData = await carrierResponse.json();
-      console.log('✅ Carrier data loaded');
-      
-      // Cache carrier data
-      localStorage.setItem('pureCarrier', JSON.stringify(carrierData.carrier));
-      
-      onLogin(carrierData.carrier);
+        const carrierData = await carrierResponse.json();
+        console.log('✅ Carrier data loaded');
+        
+        // Cache carrier data
+        localStorage.setItem('pureCarrier', JSON.stringify(carrierData.carrier));
+        
+        onLogin(carrierData.carrier);
       } else {
-      console.log('📝 No carrier data - new registration needed');
-     onLogin({ isNewUser: true });
-    }
-      console.error('❌ Password reset error:', error);
-      setError('Failed to reset password. Please try again.');
+        console.log('📝 No carrier data - new registration needed');
+        onLogin({ isNewUser: true });
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      setError('Invalid email or password');
     } finally {
       setIsLoading(false);
     }
