@@ -3289,7 +3289,7 @@ const [isVerifier, setIsVerifier] = useState(false);
       // LOW priority (never calls) - tips, fun facts, general info
       const lowPriorityKeywords = ['tip:', 'did you know', 'fun fact', 'by the way'];
       const isLowPriority = lowPriorityKeywords.some(keyword => 
-        data.response.toLowerCase().includes(keyword)
+        .toLowerCase().includes(keyword)
       );
       
       if (isLowPriority) {
@@ -3297,11 +3297,11 @@ const [isVerifier, setIsVerifier] = useState(false);
       }
       
       // Create tracked message
-      // NOTE: This placeholder will be replaced with: createTrackedMessage(data.response, MESSAGE_PRIORITY[priority], {...})
+      // NOTE: This placeholder will be replaced with: createTrackedMessage(data.text, MESSAGE_PRIORITY[priority], {...})
       const trackedMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       messageTracker.trackMessage({
         id: trackedMessageId,
-        text: data.response,
+        text: data.text,
         priority: priority,
         from: 'pure',
         sentAt: Date.now(),
@@ -3314,7 +3314,7 @@ const [isVerifier, setIsVerifier] = useState(false);
       console.log(`📊 Tracking message with ${priority} priority:`, trackedMessageId);
 
       if (audioEnabled) {
-        await forceSpeak(data.response, () => setIsSpeaking(true), () => setIsSpeaking(false));
+        await forceSpeak(data.text, () => setIsSpeaking(true), () => setIsSpeaking(false));
       }
     } catch (err) {
       // Mock responses with GPS integration
