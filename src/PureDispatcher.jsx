@@ -2609,9 +2609,10 @@ useEffect(() => {
   try {
     const carrierData = JSON.parse(savedCarrier);
     setCarrier(carrierData);
-    setIsRegistered(true);
-    setIsLoggedIn(true);
-    setShowDashboard(true);
+setIsRegistered(true);
+setIsLoggedIn(true);
+setShowDashboard(true);
+checkSubscription();
     
     // ADDED: Also fetch user data from backend
     const authToken = localStorage.getItem('authToken');
