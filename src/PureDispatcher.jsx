@@ -3288,8 +3288,8 @@ const [isVerifier, setIsVerifier] = useState(false);
       
       // LOW priority (never calls) - tips, fun facts, general info
       const lowPriorityKeywords = ['tip:', 'did you know', 'fun fact', 'by the way'];
-      const isLowPriority = lowPriorityKeywords.some(keyword => 
-        .toLowerCase().includes(keyword)
+      const isLowPriority = lowPriorityKeywords.some(keyword =>
+  (data.text || '').toLowerCase().includes(keyword)
       );
       
       if (isLowPriority) {
