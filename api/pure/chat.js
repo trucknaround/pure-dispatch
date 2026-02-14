@@ -1,3 +1,5 @@
+console.log('[Pure] API Key present:', !!process.env.OPENAI_API_KEY);
+console.log('[Pure] API Key prefix:', process.env.OPENAI_API_KEY?.substring(0, 10));
 // api/pure/chat.js
 // Vercel Serverless Function for Pure Dispatch AI Chat
 import OpenAI from 'openai';
