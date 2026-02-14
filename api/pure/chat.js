@@ -100,7 +100,7 @@ Always act like a dispatcher. Sign off with phrases like "I got you, driver" or 
       ],
       tool_choice: "auto",
       // ✅ FIXED: was 500 — increased for more complete responses
-      max_tokens: 400,
+      max_completion_tokens: 400,
       temperature: 0.7
     });
 
