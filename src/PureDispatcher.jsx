@@ -1,5 +1,3 @@
-
-
 const Logo = ({ size = 'md', showText = true, className = '' }) => {
   const sizeMap = {
     sm: 'w-8 h-8',
@@ -2610,24 +2608,46 @@ useEffect(() => {
   try {
     const carrierData = JSON.parse(savedCarrier);
     setCarrier(carrierData);
-setIsRegistered(true);
-setIsLoggedIn(true);
-setShowDashboard(true);
-checkSubscription();
-    
-    // ADDED: Also fetch user data from backend
-    const authToken = localStorage.getItem('authToken');
-    if (authToken) {
+    setIsRegistered(true);
+    setIsLoggedIn(true);
+
+    // Check subscription FIRST before deciding what to show
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      fetch('https://pure-dispatch-landing.vercel.app/api/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(userData => {
+          setSubscriptionStatus(userData.subscription_status);
+          if (userData.subscription_status !== 'active') {
+            // No active subscription - show subscribe page
+            setCurrentView('subscribe');
+          } else {
+            // Active subscription - show dashboard
+            setShowDashboard(true);
+          }
+        })
+        .catch(err => {
+          console.error('Subscription check failed:', err);
+          // On error, let them through
+          setShowDashboard(true);
+        });
+
+      // Also fetch user profile data
       fetch(`${BACKEND_URL}/api/profile/get`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(r => r.json())
         .then(data => {
           if (data.success && data.user) {
-            setUser(data.user); // THIS LINE IS CRITICAL
+            setUser(data.user);
           }
         })
         .catch(err => console.error('Failed to load user data:', err));
+    } else {
+      // No token means not properly authenticated
+      setShowDashboard(true);
     }
   } catch (e) {
     localStorage.removeItem('pureCarrier');
@@ -2821,28 +2841,30 @@ checkSubscription();
 
   const handleLogin = (data) => {
   if (data && data.isNewUser) {
-    // New user - start registration flow
+    // New user - start registration flow (no subscription check needed yet)
     setIsLoggedIn(true);
     setRegistrationStep('personal');
     localStorage.setItem('pureActiveSession', 'true');
-    // Check subscription for new users
-    checkSubscription();
   } else if (data) {
-    // Existing user - load their data
+    // Existing user - load their data then check subscription
     setCarrier(data);
     setIsRegistered(true);
     setIsLoggedIn(true);
-    setShowDashboard(true);
     setRegistrationStep('none');
     localStorage.setItem('pureActiveSession', 'true');
-    // Check subscription for existing users
-    checkSubscription();
+    // Check subscription - will set view to 'subscribe' or 'home'
+    checkSubscription().then(() => {
+      // After subscription check resolves, if user has active sub
+      // checkSubscription already sets currentView appropriately
+    }).catch(() => {
+      // On error, let them through to dashboard
+      setShowDashboard(true);
+    });
   } else {
-    // Fallback - start registration
+    // Fallback - start registration (no subscription check needed)
     setIsLoggedIn(true);
     setRegistrationStep('personal');
     localStorage.setItem('pureActiveSession', 'true');
-    checkSubscription();
   }
 };
 
@@ -4016,17 +4038,19 @@ const [isVerifier, setIsVerifier] = useState(false);
           <button
             onClick={async () => {
               try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const token = localStorage.getItem('authToken');
                 
-                if (!session) {
+                if (!token) {
                   alert('Please log in first');
+                  setCurrentView('login');
+                  setIsLoggedIn(false);
                   return;
                 }
 
                 const response = await fetch('https://pure-dispatch-landing.vercel.app/api/create-checkout-session', {
                   method: 'POST',
                   headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                   }
                 });
@@ -4036,7 +4060,8 @@ const [isVerifier, setIsVerifier] = useState(false);
                 if (data.url) {
                   window.location.href = data.url;
                 } else {
-                  alert('Failed to create checkout session');
+                  console.error('Checkout session error:', data);
+                  alert('Failed to create checkout session. Please try again.');
                 }
               } catch (error) {
                 console.error('Checkout error:', error);
