@@ -2379,7 +2379,9 @@ const checkSubscription = async () => {
     const token = localStorage.getItem('authToken');
 
     if (!token) {
-      setCurrentView('subscribe');
+      // No token = not logged in, show login page
+      setCurrentView('login');
+      setIsLoggedIn(false);
       return;
     }
 
@@ -2389,7 +2391,17 @@ const checkSubscription = async () => {
       }
     });
 
+    // If 401/403, token is invalid or not recognized
+    if (response.status === 401 || response.status === 403) {
+      console.warn('Subscription check: token not authorized, skipping paywall');
+      // Don't block the user - let them use the app
+      // The landing page API may not recognize the app's JWT
+      setCurrentView('home');
+      return;
+    }
+
     const userData = await response.json();
+    console.log('Subscription check result:', userData);
     setSubscriptionStatus(userData.subscription_status);
 
     if (userData.subscription_status !== 'active') {
@@ -2399,6 +2411,7 @@ const checkSubscription = async () => {
     }
   } catch (error) {
     console.error('Subscription check error:', error);
+    // On network error, don't block the user
     setCurrentView('home');
   }
 };
@@ -2617,21 +2630,27 @@ useEffect(() => {
       fetch('https://pure-dispatch-landing.vercel.app/api/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-        .then(r => r.json())
+        .then(r => {
+          if (r.status === 401 || r.status === 403) {
+            // Token not recognized by landing page API - let user through
+            console.warn('Session restore: subscription API returned 401, letting user through');
+            setShowDashboard(true);
+            return null;
+          }
+          return r.json();
+        })
         .then(userData => {
+          if (!userData) return; // Already handled above
           setSubscriptionStatus(userData.subscription_status);
           if (userData.subscription_status !== 'active') {
-            // No active subscription - show subscribe page
             setCurrentView('subscribe');
           } else {
-            // Active subscription - show dashboard
             setShowDashboard(true);
           }
         })
         .catch(err => {
           console.error('Subscription check failed:', err);
-          // On error, let them through
-          setShowDashboard(true);
+          setShowDashboard(true); // On error, let them through
         });
 
       // Also fetch user profile data
@@ -2646,8 +2665,9 @@ useEffect(() => {
         })
         .catch(err => console.error('Failed to load user data:', err));
     } else {
-      // No token means not properly authenticated
-      setShowDashboard(true);
+      // No token = not logged in properly
+      setIsLoggedIn(false);
+      setCurrentView('login');
     }
   } catch (e) {
     localStorage.removeItem('pureCarrier');
@@ -2841,7 +2861,7 @@ useEffect(() => {
 
   const handleLogin = (data) => {
   if (data && data.isNewUser) {
-    // New user - start registration flow (no subscription check needed yet)
+    // New user - start registration flow (no subscription check yet)
     setIsLoggedIn(true);
     setRegistrationStep('personal');
     localStorage.setItem('pureActiveSession', 'true');
@@ -2852,16 +2872,12 @@ useEffect(() => {
     setIsLoggedIn(true);
     setRegistrationStep('none');
     localStorage.setItem('pureActiveSession', 'true');
-    // Check subscription - will set view to 'subscribe' or 'home'
-    checkSubscription().then(() => {
-      // After subscription check resolves, if user has active sub
-      // checkSubscription already sets currentView appropriately
-    }).catch(() => {
-      // On error, let them through to dashboard
+    // Check subscription - decides whether to show 'subscribe' or 'home'
+    checkSubscription().catch(() => {
       setShowDashboard(true);
     });
   } else {
-    // Fallback - start registration (no subscription check needed)
+    // Fallback - start registration (no subscription check)
     setIsLoggedIn(true);
     setRegistrationStep('personal');
     localStorage.setItem('pureActiveSession', 'true');
@@ -4056,12 +4072,13 @@ const [isVerifier, setIsVerifier] = useState(false);
                 });
 
                 const data = await response.json();
+                console.log('Checkout response:', data);
                 
                 if (data.url) {
                   window.location.href = data.url;
                 } else {
-                  console.error('Checkout session error:', data);
-                  alert('Failed to create checkout session. Please try again.');
+                  console.error('Checkout failed:', data);
+                  alert('Failed to create checkout session: ' + (data.error || 'Unknown error'));
                 }
               } catch (error) {
                 console.error('Checkout error:', error);
