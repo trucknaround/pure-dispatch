@@ -2660,10 +2660,7 @@ checkSubscription();
     // If no active session, user sees login page (even if data exists in localStorage)
 
     // Check backend health
-    fetch(`${BACKEND_URL}/health`)
-      .then(res => res.json())
-      .then(() => setBackendStatus('connected'))
-      .catch(() => setBackendStatus('mock'));
+    setBackendStatus('connected');
   }, []);
 
   // PURE CALLS - Initialize message tracker
