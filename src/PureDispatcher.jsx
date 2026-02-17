@@ -1428,12 +1428,14 @@ function PersonalRegistration({ onComplete, existingData }) {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
       // Pass data to parent (don't include confirmPassword)
       const { confirmPassword, ...dataToSave } = formData;
-      onComplete(dataToSave);
+      try {
+        await onComplete(dataToSave);
+      } catch (err) {
+        console.error('Registration error:', err);
+      }
       setIsSubmitting(false);
-    }, 500);
   };
 
   return (
@@ -2391,12 +2393,12 @@ const checkSubscription = async () => {
       }
     });
 
-    // If 401/403, token is invalid or not recognized
+    // If 401/403, token is not recognized by landing page API
     if (response.status === 401 || response.status === 403) {
-      console.warn('Subscription check: token not authorized, skipping paywall');
-      // Don't block the user - let them use the app
-      // The landing page API may not recognize the app's JWT
-      setCurrentView('home');
+      console.warn('Subscription check: token not authorized by landing page API');
+      // User is logged in to app but landing page doesn't recognize their token
+      // Show subscribe page so they can pay
+      setCurrentView('subscribe');
       return;
     }
 
@@ -2607,6 +2609,58 @@ useEffect(() => {
 
   // Check for existing session
   useEffect(() => {
+    // Handle return from Stripe checkout
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('subscribed') === 'true') {
+      console.log('✅ Returned from Stripe checkout - refreshing subscription status');
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      // Give Stripe webhook a moment to process, then check subscription
+      setTimeout(() => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          fetch('https://pure-dispatch-landing.vercel.app/api/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+            .then(r => r.json())
+            .then(userData => {
+              console.log('Post-payment subscription status:', userData.subscription_status);
+              setSubscriptionStatus(userData.subscription_status);
+              if (userData.subscription_status === 'active') {
+                setShowDashboard(true);
+                setCurrentView('home');
+              } else {
+                // Webhook hasn't processed yet, try again in a few seconds
+                setTimeout(() => {
+                  fetch('https://pure-dispatch-landing.vercel.app/api/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  })
+                    .then(r => r.json())
+                    .then(retryData => {
+                      if (retryData.subscription_status === 'active') {
+                        setSubscriptionStatus('active');
+                        setShowDashboard(true);
+                        setCurrentView('home');
+                      } else {
+                        // Still not active, let them through anyway - webhook will catch up
+                        setShowDashboard(true);
+                      }
+                    })
+                    .catch(() => setShowDashboard(true));
+                }, 5000);
+              }
+            })
+            .catch(() => setShowDashboard(true));
+        }
+      }, 2000);
+      return; // Don't run rest of useEffect
+    }
+
+    if (urlParams.get('canceled') === 'true') {
+      console.log('Payment canceled');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     // Check if there's an ACTIVE session (not just saved data)
     const activeSession = localStorage.getItem('pureActiveSession');
     
@@ -2884,15 +2938,60 @@ useEffect(() => {
   }
 };
 
-  const handlePersonalRegistrationComplete = (data) => {
+  const handlePersonalRegistrationComplete = async (data) => {
     setPersonalData(data);
-    setRegistrationStep('carrier');
     
-    // Save credentials for login
-    localStorage.setItem('pureUserCredentials', JSON.stringify({
-      email: data.email,
-      password: data.password // In production, hash this server-side
-    }));
+    // Create the user account on the backend FIRST to get a JWT token
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          phone: data.phone
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.token) {
+        // Save the JWT token so carrier registration can use it
+        localStorage.setItem('authToken', result.token);
+        localStorage.setItem('userEmail', data.email);
+        if (result.user?.id) {
+          localStorage.setItem('userId', result.user.id);
+        }
+        console.log('✅ Account created, token saved');
+      } else if (result.error) {
+        console.warn('Registration API error:', result.error);
+        // If user already exists, try logging in instead
+        const loginResponse = await fetch(`${BACKEND_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: data.email, password: data.password })
+        });
+        const loginResult = await loginResponse.json();
+        if (loginResult.token) {
+          localStorage.setItem('authToken', loginResult.token);
+          localStorage.setItem('userEmail', data.email);
+          if (loginResult.user?.id) {
+            localStorage.setItem('userId', loginResult.user.id);
+          }
+          console.log('✅ Existing user logged in, token saved');
+        }
+      }
+    } catch (err) {
+      console.error('Account creation failed:', err);
+      // Save credentials locally as fallback
+      localStorage.setItem('pureUserCredentials', JSON.stringify({
+        email: data.email,
+        password: data.password
+      }));
+    }
+    
+    setRegistrationStep('carrier');
   };
 
   const handleRegistrationComplete = (carrierData) => {
@@ -2923,10 +3022,18 @@ localStorage.setItem('pureCarrier', JSON.stringify(freshCarrier));
       setCurrentView('profile');
     } else {
       setRegistrationStep('none');
-      // Check subscription before letting new user into the app
-      checkSubscription().catch(() => {
-        setShowDashboard(true);
-      });
+      // If we have a token, check subscription status
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        checkSubscription().catch(() => {
+          // On error, show subscribe page for new users
+          setCurrentView('subscribe');
+        });
+      } else {
+        // No token (registration didn't create account) - show subscribe page
+        // They'll need to pay, then the app will recognize them on next login
+        setCurrentView('subscribe');
+      }
     }
     
     // Welcome voice message
