@@ -2918,12 +2918,15 @@ localStorage.setItem('pureCarrier', JSON.stringify(freshCarrier));
     localStorage.setItem('pureActiveSession', 'true'); // Mark session as active
     
     // If editing profile, go back to profile view
-    // Otherwise, show dashboard (new registration)
+    // Otherwise, check subscription (new registration)
     if (currentView === 'profile-edit') {
       setCurrentView('profile');
     } else {
-      setShowDashboard(true);
       setRegistrationStep('none');
+      // Check subscription before letting new user into the app
+      checkSubscription().catch(() => {
+        setShowDashboard(true);
+      });
     }
     
     // Welcome voice message
