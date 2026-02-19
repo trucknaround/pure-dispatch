@@ -34,8 +34,7 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
 };
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
-import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader } from 'lucide-react';
-// NOTE: These files need to be uploaded to your project:
+import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader, Users, Plus } from 'lucide-react';
         import VerificationDashboard from './VerificationDashboard';
 // - src/utils/messageTracking.js (upload message-tracking-system.js here)
 // - src/components/CallSettingsPanel.jsx (already created)
@@ -2417,6 +2416,21 @@ const checkSubscription = async () => {
     setCurrentView('home');
   }
 };
+  // CRM State
+  const [crmView, setCrmView] = useState('dashboard');
+  const [crmBrokers, setCrmBrokers] = useState([]);
+  const [crmLeads, setCrmLeads] = useState([]);
+  const [crmStats, setCrmStats] = useState(null);
+  const [crmLoading, setCrmLoading] = useState(false);
+  const [crmSearch, setCrmSearch] = useState('');
+  const [crmFilter, setCrmFilter] = useState('all');
+  const [selectedBroker, setSelectedBroker] = useState(null);
+  const [emailPreview, setEmailPreview] = useState(null);
+  const [showAddBroker, setShowAddBroker] = useState(false);
+  const [newBroker, setNewBroker] = useState({ company_name: '', contact_name: '', mc_number: '', email: '', phone: '', address_state: '', days_to_pay: '', tags: '' });
+  const [fmcsaSearch, setFmcsaSearch] = useState('');
+  const [fmcsaResults, setFmcsaResults] = useState([]);
+  const [laneRecs, setLaneRecs] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -4207,6 +4221,767 @@ const [isVerifier, setIsVerifier] = useState(false);
       </div>
     );
   }
+  // =====================================================
+// CRM VIEW — Broker Outreach & Relationship Management
+// =====================================================
+// PASTE THIS BLOCK into PureDispatcher.jsx
+// Place it RIGHT BEFORE: if (currentView === 'profile') {
+//
+// ALSO ADD to your navigation buttons section:
+//   <button onClick={() => setCurrentView('crm')} className="...">
+//     <Users className="w-4 h-4" /> CRM
+//   </button>
+//
+// ALSO ADD these imports at the top of PureDispatcher.jsx:
+//   import { Users, Mail, Phone, Search, Plus, Star, Send, 
+//            RefreshCw, Filter, ChevronDown, ChevronUp, 
+//            Building2, MapPin, TrendingUp, Clock, 
+//            AlertCircle, CheckCircle, XCircle, Eye } from 'lucide-react';
+//
+// ALSO ADD these state variables near your other useState declarations:
+//   const [crmView, setCrmView] = useState('dashboard');
+//   const [crmBrokers, setCrmBrokers] = useState([]);
+//   const [crmLeads, setCrmLeads] = useState([]);
+//   const [crmStats, setCrmStats] = useState(null);
+//   const [crmLoading, setCrmLoading] = useState(false);
+//   const [crmSearch, setCrmSearch] = useState('');
+//   const [crmFilter, setCrmFilter] = useState('all');
+//   const [selectedBroker, setSelectedBroker] = useState(null);
+//   const [emailPreview, setEmailPreview] = useState(null);
+//   const [showAddBroker, setShowAddBroker] = useState(false);
+//   const [newBroker, setNewBroker] = useState({ company_name: '', contact_name: '', mc_number: '', email: '', phone: '', address_state: '', days_to_pay: '', tags: '' });
+//   const [fmcsaSearch, setFmcsaSearch] = useState('');
+//   const [fmcsaResults, setFmcsaResults] = useState([]);
+//   const [laneRecs, setLaneRecs] = useState(null);
+//
+// =====================================================
+
+if (currentView === 'crm') {
+  // Helper: get auth token
+  const getToken = () => localStorage.getItem('authToken');
+  const API = 'https://pure-dispatch-landing.vercel.app/api';
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${getToken()}`,
+    'Content-Type': 'application/json'
+  });
+
+  // CRM API functions
+  const loadBrokers = async () => {
+    setCrmLoading(true);
+    try {
+      const r = await fetch(`${API}/brokers?action=list&sort=score`, { headers: authHeaders() });
+      const d = await r.json();
+      setCrmBrokers(d.brokers || []);
+    } catch (e) { console.error('Load brokers error:', e); }
+    setCrmLoading(false);
+  };
+
+  const loadStats = async () => {
+    try {
+      const r = await fetch(`${API}/response-track?action=stats`, { headers: authHeaders() });
+      const d = await r.json();
+      setCrmStats(d.stats);
+    } catch (e) { console.error('Load stats error:', e); }
+  };
+
+  const loadRecommendations = async () => {
+    try {
+      const r = await fetch(`${API}/lane-targeting?action=recommendations`, { headers: authHeaders() });
+      const d = await r.json();
+      setLaneRecs(d);
+    } catch (e) { console.error('Lane recs error:', e); }
+  };
+
+  const addBrokerToCRM = async () => {
+    try {
+      const r = await fetch(`${API}/brokers`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          action: 'create',
+          ...newBroker,
+          days_to_pay: newBroker.days_to_pay ? parseInt(newBroker.days_to_pay) : null,
+          tags: newBroker.tags ? newBroker.tags.split(',').map(t => t.trim()) : []
+        })
+      });
+      const d = await r.json();
+      if (d.broker) {
+        setCrmBrokers(prev => [d.broker, ...prev]);
+        setShowAddBroker(false);
+        setNewBroker({ company_name: '', contact_name: '', mc_number: '', email: '', phone: '', address_state: '', days_to_pay: '', tags: '' });
+      }
+    } catch (e) { console.error('Add broker error:', e); }
+  };
+
+  const searchFMCSA = async () => {
+    if (!fmcsaSearch.trim()) return;
+    setCrmLoading(true);
+    try {
+      const r = await fetch(`${API}/fmcsa-directory?action=live-search&q=${encodeURIComponent(fmcsaSearch)}`, { headers: authHeaders() });
+      const d = await r.json();
+      setFmcsaResults(d.results || []);
+    } catch (e) { console.error('FMCSA search error:', e); }
+    setCrmLoading(false);
+  };
+
+  const importFMCSALead = async (mc) => {
+    try {
+      const r = await fetch(`${API}/fmcsa-directory?action=import-mc&mc=${mc}`, { headers: authHeaders() });
+      const d = await r.json();
+      if (d.lead) {
+        // Now import lead to CRM
+        const r2 = await fetch(`${API}/brokers`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ action: 'import-lead', lead_id: d.lead.id })
+        });
+        const d2 = await r2.json();
+        if (d2.broker) {
+          setCrmBrokers(prev => [d2.broker, ...prev]);
+          setFmcsaResults(prev => prev.filter(l => l.mc_number !== mc));
+        }
+      }
+    } catch (e) { console.error('Import error:', e); }
+  };
+
+  const previewEmail = async (brokerId) => {
+    try {
+      const r = await fetch(`${API}/email-send`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'preview', broker_id: brokerId })
+      });
+      const d = await r.json();
+      setEmailPreview(d.preview);
+      setSelectedBroker(brokerId);
+    } catch (e) { console.error('Preview error:', e); }
+  };
+
+  const sendOutreach = async (brokerId) => {
+    try {
+      const r = await fetch(`${API}/email-send`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'send-initial', broker_id: brokerId })
+      });
+      const d = await r.json();
+      if (d.success) {
+        setCrmBrokers(prev => prev.map(b => b.id === brokerId ? { ...b, outreach_status: 'contacted' } : b));
+        setEmailPreview(null);
+        setSelectedBroker(null);
+      }
+      return d;
+    } catch (e) { console.error('Send error:', e); return { success: false }; }
+  };
+
+  const scoreBroker = async (brokerId) => {
+    try {
+      const r = await fetch(`${API}/broker-score?action=score&id=${brokerId}`, { headers: authHeaders() });
+      return await r.json();
+    } catch (e) { return null; }
+  };
+
+  const checkCompliance = async (state) => {
+    try {
+      const r = await fetch(`${API}/compliance-check?action=check-call&state=${state}`, { headers: authHeaders() });
+      return await r.json();
+    } catch (e) { return null; }
+  };
+
+  const generateCallScript = async (brokerId) => {
+    try {
+      const r = await fetch(`${API}/voice-call`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'generate-script', broker_id: brokerId })
+      });
+      return await r.json();
+    } catch (e) { return null; }
+  };
+
+  // Load data on mount
+  if (crmBrokers.length === 0 && !crmLoading) {
+    loadBrokers();
+    loadStats();
+  }
+
+  // Filter brokers
+  const filteredBrokers = crmBrokers.filter(b => {
+    const matchesSearch = !crmSearch || 
+      b.company_name?.toLowerCase().includes(crmSearch.toLowerCase()) ||
+      b.mc_number?.includes(crmSearch) ||
+      b.contact_name?.toLowerCase().includes(crmSearch.toLowerCase());
+    const matchesFilter = crmFilter === 'all' || b.outreach_status === crmFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  // Status badge helper
+  const StatusBadge = ({ status }) => {
+    const colors = {
+      new: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      contacted: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      responded: 'bg-green-500/20 text-green-400 border-green-500/30',
+      negotiating: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      active: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+      inactive: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      blacklisted: 'bg-red-500/20 text-red-400 border-red-500/30',
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs border ${colors[status] || colors.new}`}>
+        {status || 'new'}
+      </span>
+    );
+  };
+
+  // Score badge helper
+  const ScoreBadge = ({ score }) => {
+    const color = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-cyan-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+    return <span className={`font-bold ${color}`}>{score || 0}</span>;
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      {/* CRM Header */}
+      <div className="bg-gray-900 border-b border-cyan-500/20 px-4 py-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setCurrentView('home')} className="text-gray-400 hover:text-white transition-colors">
+              ← Back
+            </button>
+            <h1 className="text-xl font-bold text-cyan-400">Broker CRM</h1>
+            {crmStats && (
+              <span className="text-xs text-gray-500">
+                {crmStats.total_brokers} brokers · {crmStats.overall_response_rate} response rate
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setCrmBrokers([]); loadBrokers(); loadStats(); }}
+              className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-cyan-400 transition-colors"
+              title="Refresh"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* CRM Sub-Navigation */}
+      <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-2">
+        <div className="max-w-6xl mx-auto flex gap-1 overflow-x-auto">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+            { id: 'brokers', label: 'My Brokers', icon: '🤝' },
+            { id: 'find', label: 'Find Brokers', icon: '🔍' },
+            { id: 'outreach', label: 'Outreach', icon: '📧' },
+            { id: 'targeting', label: 'Lane Targeting', icon: '🎯' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setCrmView(tab.id);
+                if (tab.id === 'targeting' && !laneRecs) loadRecommendations();
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                crmView === tab.id
+                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-6">
+
+        {/* ═══════════════════════════════════════ */}
+        {/* DASHBOARD VIEW */}
+        {/* ═══════════════════════════════════════ */}
+        {crmView === 'dashboard' && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <p className="text-gray-500 text-xs uppercase tracking-wider">Total Brokers</p>
+                <p className="text-2xl font-bold text-white mt-1">{crmStats?.total_brokers || 0}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <p className="text-gray-500 text-xs uppercase tracking-wider">Emails Sent</p>
+                <p className="text-2xl font-bold text-cyan-400 mt-1">{crmStats?.emails_sent || 0}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <p className="text-gray-500 text-xs uppercase tracking-wider">Responses</p>
+                <p className="text-2xl font-bold text-green-400 mt-1">{crmStats?.emails_replied || 0}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <p className="text-gray-500 text-xs uppercase tracking-wider">Pending Follow-ups</p>
+                <p className="text-2xl font-bold text-yellow-400 mt-1">{crmStats?.pending_follow_ups || 0}</p>
+              </div>
+            </div>
+
+            {/* Broker Status Breakdown */}
+            {crmStats?.brokers_by_status && Object.keys(crmStats.brokers_by_status).length > 0 && (
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h3 className="text-sm font-medium text-gray-400 mb-3">Pipeline</h3>
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(crmStats.brokers_by_status).map(([status, count]) => (
+                    <div key={status} className="flex items-center gap-2">
+                      <StatusBadge status={status} />
+                      <span className="text-white font-medium">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => setCrmView('find')}
+                className="bg-gray-900 border border-gray-800 rounded-xl p-5 text-left hover:border-cyan-500/30 transition-colors group"
+              >
+                <span className="text-2xl">🔍</span>
+                <h3 className="text-white font-medium mt-2 group-hover:text-cyan-400 transition-colors">Find New Brokers</h3>
+                <p className="text-gray-500 text-sm mt-1">Search FMCSA database for brokers in your lanes</p>
+              </button>
+              <button
+                onClick={() => setCrmView('outreach')}
+                className="bg-gray-900 border border-gray-800 rounded-xl p-5 text-left hover:border-cyan-500/30 transition-colors group"
+              >
+                <span className="text-2xl">📧</span>
+                <h3 className="text-white font-medium mt-2 group-hover:text-cyan-400 transition-colors">Send Outreach</h3>
+                <p className="text-gray-500 text-sm mt-1">Email brokers with personalized cold outreach</p>
+              </button>
+              <button
+                onClick={() => { setCrmView('targeting'); if (!laneRecs) loadRecommendations(); }}
+                className="bg-gray-900 border border-gray-800 rounded-xl p-5 text-left hover:border-cyan-500/30 transition-colors group"
+              >
+                <span className="text-2xl">🎯</span>
+                <h3 className="text-white font-medium mt-2 group-hover:text-cyan-400 transition-colors">Lane Targeting</h3>
+                <p className="text-gray-500 text-sm mt-1">AI recommendations based on your lanes</p>
+              </button>
+            </div>
+
+            {/* Recent Brokers */}
+            {crmBrokers.length > 0 && (
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-gray-400">Recent Brokers</h3>
+                  <button onClick={() => setCrmView('brokers')} className="text-cyan-400 text-xs hover:underline">View All →</button>
+                </div>
+                <div className="space-y-2">
+                  {crmBrokers.slice(0, 5).map(broker => (
+                    <div key={broker.id} className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs font-bold text-cyan-400">
+                          {broker.company_name?.charAt(0) || '?'}
+                        </div>
+                        <div>
+                          <p className="text-white text-sm font-medium">{broker.company_name}</p>
+                          <p className="text-gray-500 text-xs">MC# {broker.mc_number || 'N/A'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <ScoreBadge score={broker.relationship_score} />
+                        <StatusBadge status={broker.outreach_status} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════ */}
+        {/* MY BROKERS VIEW */}
+        {/* ═══════════════════════════════════════ */}
+        {crmView === 'brokers' && (
+          <div className="space-y-4">
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                  type="text"
+                  value={crmSearch}
+                  onChange={(e) => setCrmSearch(e.target.value)}
+                  placeholder="Search brokers by name, MC#, contact..."
+                  className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
+                />
+              </div>
+              <select
+                value={crmFilter}
+                onChange={(e) => setCrmFilter(e.target.value)}
+                className="bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white text-sm focus:border-cyan-500/50 focus:outline-none"
+              >
+                <option value="all">All Status</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="responded">Responded</option>
+                <option value="negotiating">Negotiating</option>
+                <option value="active">Active</option>
+                <option value="blacklisted">Blacklisted</option>
+              </select>
+              <button
+                onClick={() => setShowAddBroker(true)}
+                className="px-4 py-2.5 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4" /> Add Broker
+              </button>
+            </div>
+
+            {/* Add Broker Modal */}
+            {showAddBroker && (
+              <div className="bg-gray-900 border border-cyan-500/30 rounded-xl p-5 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-cyan-400 font-medium">Add New Broker</h3>
+                  <button onClick={() => setShowAddBroker(false)} className="text-gray-500 hover:text-white">✕</button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input placeholder="Company Name *" value={newBroker.company_name} onChange={(e) => setNewBroker(p => ({...p, company_name: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  <input placeholder="Contact Name" value={newBroker.contact_name} onChange={(e) => setNewBroker(p => ({...p, contact_name: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  <input placeholder="MC Number" value={newBroker.mc_number} onChange={(e) => setNewBroker(p => ({...p, mc_number: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  <input placeholder="Email" value={newBroker.email} onChange={(e) => setNewBroker(p => ({...p, email: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  <input placeholder="Phone" value={newBroker.phone} onChange={(e) => setNewBroker(p => ({...p, phone: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  <input placeholder="State (e.g. NJ)" value={newBroker.address_state} onChange={(e) => setNewBroker(p => ({...p, address_state: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  <input placeholder="Days to Pay" type="number" value={newBroker.days_to_pay} onChange={(e) => setNewBroker(p => ({...p, days_to_pay: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  <input placeholder="Tags (comma-separated)" value={newBroker.tags} onChange={(e) => setNewBroker(p => ({...p, tags: e.target.value}))} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                </div>
+                <div className="flex gap-2 justify-end pt-2">
+                  <button onClick={() => setShowAddBroker(false)} className="px-4 py-2 bg-gray-800 text-gray-400 rounded-lg hover:bg-gray-700 text-sm">Cancel</button>
+                  <button onClick={addBrokerToCRM} disabled={!newBroker.company_name} className="px-4 py-2 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 disabled:opacity-50 text-sm">Add Broker</button>
+                </div>
+              </div>
+            )}
+
+            {/* Broker List */}
+            {crmLoading ? (
+              <div className="text-center py-12 text-gray-500">Loading brokers...</div>
+            ) : filteredBrokers.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">No brokers found. Start building your CRM!</p>
+                <button onClick={() => setCrmView('find')} className="px-4 py-2 bg-cyan-500 text-black font-medium rounded-lg">Find Brokers →</button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredBrokers.map(broker => (
+                  <div key={broker.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-sm font-bold text-cyan-400 flex-shrink-0">
+                          {broker.company_name?.charAt(0) || '?'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-white font-medium">{broker.company_name}</h3>
+                            <StatusBadge status={broker.outreach_status} />
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-gray-500">
+                            {broker.contact_name && <span>👤 {broker.contact_name}</span>}
+                            {broker.mc_number && <span>MC# {broker.mc_number}</span>}
+                            {broker.address_state && <span>📍 {broker.address_state}</span>}
+                            {broker.email && <span>✉️ {broker.email}</span>}
+                            {broker.phone && <span>📞 {broker.phone}</span>}
+                            {broker.days_to_pay && <span>💰 {broker.days_to_pay} day pay</span>}
+                          </div>
+                          {broker.tags && broker.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {broker.tags.map((tag, i) => (
+                                <span key={i} className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded text-xs">{tag}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="text-center mr-3">
+                          <ScoreBadge score={broker.relationship_score} />
+                          <p className="text-xs text-gray-600 mt-0.5">score</p>
+                        </div>
+                        {broker.email && broker.outreach_status === 'new' && (
+                          <button
+                            onClick={() => previewEmail(broker.id)}
+                            className="px-3 py-1.5 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-xs hover:bg-cyan-500/30 transition-colors flex items-center gap-1"
+                          >
+                            <Mail className="w-3 h-3" /> Email
+                          </button>
+                        )}
+                        <button
+                          onClick={async () => {
+                            const result = await generateCallScript(broker.id);
+                            if (result?.script) {
+                              alert(`CALL SCRIPT FOR ${broker.company_name}:\n\n${result.script.full_script}`);
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-gray-800 text-gray-400 rounded-lg text-xs hover:bg-gray-700 transition-colors flex items-center gap-1"
+                        >
+                          <Phone className="w-3 h-3" /> Script
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════ */}
+        {/* FIND BROKERS VIEW */}
+        {/* ═══════════════════════════════════════ */}
+        {crmView === 'find' && (
+          <div className="space-y-4">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <h3 className="text-white font-medium mb-3">Search FMCSA Database</h3>
+              <p className="text-gray-500 text-sm mb-4">Search by company name to find licensed brokers. Import them directly into your CRM.</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={fmcsaSearch}
+                  onChange={(e) => setFmcsaSearch(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchFMCSA()}
+                  placeholder="Search by company name (e.g. 'CH Robinson', 'TQL')"
+                  className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
+                />
+                <button
+                  onClick={searchFMCSA}
+                  disabled={crmLoading || !fmcsaSearch.trim()}
+                  className="px-6 py-2.5 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 disabled:opacity-50 transition-colors"
+                >
+                  {crmLoading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+
+              {/* Import by MC */}
+              <div className="mt-4 pt-4 border-t border-gray-800">
+                <p className="text-gray-500 text-xs mb-2">Or import directly by MC number:</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    id="mc-import"
+                    placeholder="MC Number (e.g. 316928)"
+                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      const mc = document.getElementById('mc-import').value;
+                      if (mc) importFMCSALead(mc);
+                    }}
+                    className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm"
+                  >
+                    Import MC
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* FMCSA Results */}
+            {fmcsaResults.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-gray-400 text-sm">{fmcsaResults.length} broker(s) found</p>
+                {fmcsaResults.map((lead, i) => (
+                  <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-medium">{lead.legal_name}</h4>
+                      <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                        {lead.mc_number && <span>MC# {lead.mc_number}</span>}
+                        {lead.address_state && <span>📍 {lead.address_city ? `${lead.address_city}, ` : ''}{lead.address_state}</span>}
+                        {lead.phone && <span>📞 {lead.phone}</span>}
+                        <span className={lead.authority_status === 'ACTIVE' ? 'text-green-400' : 'text-red-400'}>
+                          {lead.authority_status}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => importFMCSALead(lead.mc_number)}
+                      className="px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm hover:bg-cyan-500/30 transition-colors whitespace-nowrap"
+                    >
+                      + Import to CRM
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════ */}
+        {/* OUTREACH VIEW */}
+        {/* ═══════════════════════════════════════ */}
+        {crmView === 'outreach' && (
+          <div className="space-y-4">
+            {/* Email Preview Modal */}
+            {emailPreview && (
+              <div className="bg-gray-900 border border-cyan-500/30 rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-cyan-400 font-medium">📧 Email Preview</h3>
+                  <button onClick={() => { setEmailPreview(null); setSelectedBroker(null); }} className="text-gray-500 hover:text-white">✕</button>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm"><span className="text-gray-500">To:</span> <span className="text-white">{emailPreview.to}</span></div>
+                  <div className="text-sm"><span className="text-gray-500">Subject:</span> <span className="text-white">{emailPreview.subject}</span></div>
+                  <div className="bg-gray-800 rounded-lg p-4 mt-3">
+                    <pre className="text-gray-300 text-sm whitespace-pre-wrap font-sans">{emailPreview.body}</pre>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button onClick={() => { setEmailPreview(null); setSelectedBroker(null); }} className="px-4 py-2 bg-gray-800 text-gray-400 rounded-lg text-sm">Cancel</button>
+                  <button
+                    onClick={async () => {
+                      const result = await sendOutreach(selectedBroker);
+                      if (result.success) {
+                        alert('✅ Outreach sent! Follow-ups scheduled for day 3, 7, and 14.');
+                      } else {
+                        alert('❌ Failed: ' + (result.error || result.message || 'Unknown error'));
+                      }
+                    }}
+                    className="px-4 py-2 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 text-sm flex items-center gap-2"
+                  >
+                    <Send className="w-3 h-3" /> Send Outreach
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Brokers ready for outreach */}
+            <h3 className="text-white font-medium">Brokers Ready for Outreach</h3>
+            <p className="text-gray-500 text-sm">These brokers have email addresses and haven't been contacted yet.</p>
+            
+            {crmBrokers.filter(b => b.email && b.outreach_status === 'new').length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No brokers ready for outreach. Add brokers with email addresses first.</p>
+                <button onClick={() => setCrmView('find')} className="mt-3 px-4 py-2 bg-gray-800 text-cyan-400 rounded-lg text-sm">Find Brokers →</button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {crmBrokers.filter(b => b.email && b.outreach_status === 'new').map(broker => (
+                  <div key={broker.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-medium">{broker.company_name}</h4>
+                      <p className="text-gray-500 text-xs mt-1">{broker.email} · {broker.address_state || 'Unknown state'}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => previewEmail(broker.id)}
+                        className="px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm hover:bg-cyan-500/30 transition-colors flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" /> Preview
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Send cold outreach to ${broker.company_name}?`)) {
+                            const result = await sendOutreach(broker.id);
+                            alert(result.success ? '✅ Sent!' : '❌ Failed: ' + (result.message || 'Error'));
+                          }
+                        }}
+                        className="px-4 py-2 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 text-sm flex items-center gap-1"
+                      >
+                        <Send className="w-3 h-3" /> Send
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Already contacted */}
+            {crmBrokers.filter(b => b.outreach_status !== 'new').length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-white font-medium mb-3">Outreach History</h3>
+                <div className="space-y-2">
+                  {crmBrokers.filter(b => b.outreach_status !== 'new').map(broker => (
+                    <div key={broker.id} className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                      <div>
+                        <h4 className="text-white text-sm">{broker.company_name}</h4>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {broker.total_outreach_attempts || 0} attempts · Last: {broker.last_contact_date ? new Date(broker.last_contact_date).toLocaleDateString() : 'Never'}
+                        </p>
+                      </div>
+                      <StatusBadge status={broker.outreach_status} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════ */}
+        {/* LANE TARGETING VIEW */}
+        {/* ═══════════════════════════════════════ */}
+        {crmView === 'targeting' && (
+          <div className="space-y-4">
+            {!laneRecs ? (
+              <div className="text-center py-12 text-gray-500">Loading recommendations...</div>
+            ) : (
+              <>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                  <h3 className="text-white font-medium mb-2">🎯 AI Broker Recommendations</h3>
+                  <p className="text-gray-500 text-sm">Based on your home base ({laneRecs.carrier_state}), equipment, and preferred lanes. Targeting states: {laneRecs.target_states?.join(', ')}.</p>
+                  <div className="flex gap-4 mt-3 text-sm">
+                    <span className="text-gray-400">CRM Brokers: <span className="text-white font-medium">{laneRecs.total_crm}</span></span>
+                    <span className="text-gray-400">Lead Database: <span className="text-white font-medium">{laneRecs.total_leads}</span></span>
+                  </div>
+                </div>
+
+                {laneRecs.recommendations?.length > 0 ? (
+                  <div className="space-y-2">
+                    {laneRecs.recommendations.map((rec, i) => (
+                      <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-white font-medium">{rec.company_name || rec.legal_name}</h4>
+                              <span className={`text-xs px-2 py-0.5 rounded ${rec.source === 'crm' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-gray-700 text-gray-400'}`}>
+                                {rec.source === 'crm' ? 'In CRM' : 'Lead'}
+                              </span>
+                            </div>
+                            <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                              {rec.mc_number && <span>MC# {rec.mc_number}</span>}
+                              {rec.address_state && <span>📍 {rec.address_state}</span>}
+                            </div>
+                            {rec.target_reasons?.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {rec.target_reasons.map((r, j) => (
+                                  <span key={j} className="text-xs text-green-400/80 bg-green-500/10 px-2 py-0.5 rounded">✓ {r}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-4">
+                            <div className="text-2xl font-bold text-cyan-400">{rec.target_score}</div>
+                            <div className="text-xs text-gray-500">match</div>
+                            {rec.source === 'lead' && (
+                              <button
+                                onClick={() => importFMCSALead(rec.mc_number)}
+                                className="mt-2 px-3 py-1 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded text-xs hover:bg-cyan-500/30"
+                              >
+                                + Import
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No recommendations yet. Import more brokers from FMCSA to get AI-powered targeting.</p>
+                    <button onClick={() => setCrmView('find')} className="mt-3 px-4 py-2 bg-cyan-500 text-black font-medium rounded-lg text-sm">Find Brokers →</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
   if (currentView === 'profile') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-black'}`}>
@@ -5357,6 +6132,13 @@ const [isVerifier, setIsVerifier] = useState(false);
             >
               <DollarSign className="w-4 h-4" />
               Earnings
+            </button>
+            <button
+              onClick={() => setCurrentView('crm')}
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+            >
+              <Users className="w-4 h-4" />
+              CRM
             </button>
             <button
               onClick={() => setCurrentView('settings')}
