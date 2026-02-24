@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { initializeApp, getApps } from 'firebase/app';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:8080'
@@ -16,22 +18,20 @@ export function usePushNotifications(userId, authToken) {
 
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
 
-        const { initializeApp, getApps } = await import('firebase/app');
-        const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
+        const app = getApps().length === 0
+          ? initializeApp({
+              apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+              authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+              projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+              messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+              appId: import.meta.env.VITE_FIREBASE_APP_ID,
+            })
+          : getApps()[0];
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyDKCS1O6ZPesfsBQntS0aH4cXTOLsxK6iw",
-          authDomain: "pure-dispatch.firebaseapp.com",
-          projectId: "pure-dispatch",
-          messagingSenderId: "989948959336",
-          appId: "1:989948959336:web:b3ccd664e8adf2af80b9dd"
-        };
-
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
         const messaging = getMessaging(app);
 
         const fcmToken = await getToken(messaging, {
-          vapidKey: process.env.REACT_APP_FCM_VAPID_KEY,
+          vapidKey: import.meta.env.VITE_FCM_VAPID_KEY,
           serviceWorkerRegistration: registration,
         });
 
@@ -49,11 +49,10 @@ export function usePushNotifications(userId, authToken) {
         onMessage(messaging, (payload) => {
           if (!payload.notification) return;
           const { title, body } = payload.notification;
-          const type = payload.data?.type || '';
           const emoji = {
             NEW_LOAD: '🚛', WEATHER_ALERT: '⚠️', BROKER_REPLY: '📞',
             BILLING_ISSUE: '💳', SYSTEM_ALERT: '📢'
-          }[type] || '🔔';
+          }[payload.data?.type] || '🔔';
 
           const el = document.createElement('div');
           el.style.cssText = `
