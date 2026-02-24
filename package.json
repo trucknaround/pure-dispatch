@@ -17,6 +17,7 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "@sendgrid/mail": "^8.1.0"
+ "firebase": "^10.0.0",
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
