@@ -1,3 +1,14 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from './supabaseClient';
+import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader, Users, Plus } from 'lucide-react';
+import VerificationDashboard from './VerificationDashboard';
+// import { usePushNotifications } from './usePushNotifications';
+
+// Backend URL
+const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:8080'
+  : '';
+
 const Logo = ({ size = 'md', showText = true, className = '' }) => {
   const sizeMap = {
     sm: 'w-8 h-8',
@@ -5,17 +16,14 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
     lg: 'w-16 h-16',
     xl: 'w-24 h-24'
   };
-
   const textSizeMap = {
     sm: 'text-lg',
     md: 'text-2xl',
     lg: 'text-3xl',
     xl: 'text-4xl'
   };
-
   const logoSize = sizeMap[size] || sizeMap.md;
   const textSize = textSizeMap[size] || textSizeMap.md;
-
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img 
@@ -23,7 +31,6 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
         alt="Pure Dispatch Logo" 
         className={`${logoSize} object-contain`}
       />
-      
       {showText && (
         <h1 className={`${textSize} font-bold text-white tracking-wide`}>
           Pure Dispatch
@@ -32,29 +39,6 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
     </div>
   );
 };
-import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from './supabaseClient';
-import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader, Users, Plus } from 'lucide-react';
-import VerificationDashboard from './VerificationDashboard';
-import { usePushNotifications } from './usePushNotifications';
-// - src/utils/messageTracking.js (upload message-tracking-system.js here)
-// - src/components/CallSettingsPanel.jsx (already created)
-// Uncomment these imports after uploading the files:
-/*
-import { 
-  MessageTracker, 
-  CallSettings, 
-  MESSAGE_PRIORITY,
-  createTrackedMessage,
-  formatCallMessage
-} from './utils/messageTracking';
-import CallSettingsPanel from './components/CallSettingsPanel';
-*/
-
-// Backend URL
-const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:8080'
-  : '';
 // =====================================================
 // ELEVENLABS VOICE - PURE'S AI VOICE
 // =====================================================
