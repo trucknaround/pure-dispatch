@@ -5277,7 +5277,7 @@ if (currentView === 'crm') {
   // =====================================================
   // LOAD BOARD VIEW
   // =====================================================
-  if (currentView === 'loads') {
+  if (currentView === 'loads') 
     return (
       <div className="min-h-screen bg-black">
         <div className="border-b border-gray-800">
@@ -5399,6 +5399,7 @@ if (currentView === 'crm') {
                 onClick={() => setCurrentView('favorites')}
                 className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
               >
+
                 <Star className="w-4 h-4" />
                 Favorites
               </button>
