@@ -1,9 +1,9 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader, Users, Plus } from 'lucide-react';
 import VerificationDashboard from './VerificationDashboard';
-import DisruptionMonitor from './DisruptionMonitor';
 // import { usePushNotifications } from './usePushNotifications';
 
 // Backend URL
@@ -5363,9 +5363,6 @@ if (currentView === 'crm') {
     );
   }
 
-  }
-
-  
   // =====================================================
   // HISTORY VIEW
   // =====================================================
@@ -6130,12 +6127,6 @@ if (currentView === 'crm') {
               <Users className="w-4 h-4" />
               CRM
             </button>
-            <button
-  onClick={() => setCurrentView('disruptions')}
-  className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
->
-  ⚡ Disruptions
-</button>
             <button
               onClick={() => setCurrentView('settings')}
               className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
