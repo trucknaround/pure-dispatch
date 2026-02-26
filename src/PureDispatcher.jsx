@@ -35,7 +35,7 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader, Users, Plus } from 'lucide-react';
-import VerificationDashboard from './VerificationDashboard';F
+import VerificationDashboard from './VerificationDashboard';
 import { usePushNotifications } from './usePushNotifications';
 // - src/utils/messageTracking.js (upload message-tracking-system.js here)
 // - src/components/CallSettingsPanel.jsx (already created)
