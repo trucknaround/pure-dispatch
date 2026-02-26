@@ -2345,7 +2345,7 @@ function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, c
 // MAIN PURE DISPATCHER COMPONENT
 // =====================================================
 export default function PureDispatcher() {
-  usePushNotifications(user?.id, session?.access_token);  // Auth state
+  //usePushNotifications(user?.id, session?.access_token);  // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
         const [showVerificationDashboard, setShowVerificationDashboard] = useState(false);
   const [isVerifier, setIsVerifier] = useState(true);
