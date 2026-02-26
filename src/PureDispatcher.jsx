@@ -5365,7 +5365,7 @@ if (currentView === 'crm') {
 
   }
 
-  if (currentView === 'disruptions') return <DisruptionMonitor onBack={() => setCurrentView('home')} />;
+  
   // =====================================================
   // HISTORY VIEW
   // =====================================================
