@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { MessageCircle, Truck, Send, User, Volume2, VolumeX, Clock, Zap, Mic, MicOff, MapPin, Fuel, Navigation, Package, Phone, CloudRain, AlertCircle, Building, Mail, RefreshCw, Star, History, Search, Filter, Download, LogOut, ChevronDown, Home, FileText, Upload, Check, X, Eye, Trash2, Lock, LogIn, Globe, PhoneCall, Settings, BellOff, DollarSign, TrendingUp, Bell, Shield, CheckCircle, Loader, Users, Plus } from 'lucide-react';
@@ -5277,7 +5278,7 @@ if (currentView === 'crm') {
   // =====================================================
   // LOAD BOARD VIEW
   // =====================================================
-  if (currentView === 'loads') 
+  if (currentView === 'loads') {
     return (
       <div className="min-h-screen bg-black">
         <div className="border-b border-gray-800">
@@ -5399,7 +5400,6 @@ if (currentView === 'crm') {
                 onClick={() => setCurrentView('favorites')}
                 className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
               >
-
                 <Star className="w-4 h-4" />
                 Favorites
               </button>
