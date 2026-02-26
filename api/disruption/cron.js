@@ -3,82 +3,116 @@
 // api/disruption/cron.js
 // ============================================================
 // Runs every 15 minutes via Vercel cron (set in vercel.json).
-// Checks all active loads for disruption risks and creates
-// alerts + sends push notifications to affected drivers.
-//
-// vercel.json already has:
-//   { "path": "/api/disruption/cron", "schedule": "*/15 * * * *" }
+// Uses Firebase Admin SDK (HTTP v1 API) — no legacy server key needed.
 // ============================================================
 
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // use service role for backend
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const BACKEND_URL = process.env.BACKEND_URL || 'https://pure-dispatch.vercel.app';
+// ── FCM v1 Auth: get OAuth2 access token from service account ──
+async function getFCMAccessToken() {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-// ── Thresholds ──────────────────────────────────────────────
-const LATE_RISK_THRESHOLD_HOURS = 2;   // flag if ETA < 2hrs from deadline
-const SEVERE_LATE_THRESHOLD_HOURS = 0.5;
-
-export default async function handler(req, res) {
-  // Vercel cron sends GET — block all other unauthorized requests
-  const authHeader = req.headers.authorization;
-  if (
-    req.method !== 'GET' &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('Missing Firebase service account env variables');
   }
 
-  console.log('[DisruptionCron] Starting run at', new Date().toISOString());
-
-  const results = {
-    checked: 0,
-    alertsCreated: 0,
-    notificationsSent: 0,
-    errors: [],
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const payload = {
+    iss: clientEmail,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
   };
 
+  const base64url = (obj) =>
+    Buffer.from(JSON.stringify(obj)).toString('base64url');
+
+  const signingInput = `${base64url(header)}.${base64url(payload)}`;
+
+  const { createSign } = await import('crypto');
+  const sign = createSign('RSA-SHA256');
+  sign.update(signingInput);
+  const signature = sign.sign(privateKey, 'base64url');
+
+  const jwt = `${signingInput}.${signature}`;
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) {
+    throw new Error(`FCM token error: ${JSON.stringify(tokenData)}`);
+  }
+
+  return { accessToken: tokenData.access_token, projectId };
+}
+
+// ── Send push notification via FCM v1 ───────────────────────
+async function sendPushNotification(fcmToken, type, message, data = {}) {
   try {
-    // ── 1. Fetch all active loads ──────────────────────────
-    const { data: activeLoads, error: loadError } = await supabase
-      .from('loads')
-      .select(`
-        id, load_id, status, pickup_time, delivery_deadline,
-        origin, destination, broker_name, broker_phone,
-        driver_id, rate, miles, equipment_type,
-        users(id, email, fcm_token)
-      `)
-      .in('status', ['accepted', 'in_transit', 'picked_up'])
-      .not('delivery_deadline', 'is', null);
+    const { accessToken, projectId } = await getFCMAccessToken();
 
-    if (loadError) throw loadError;
-    results.checked = activeLoads?.length || 0;
+    const TITLES = {
+      LATE_RISK: '⏰ Delivery Alert',
+      WEATHER:   '🌩️ Weather Alert',
+      BREAKDOWN: '🔧 Breakdown Alert',
+      TRAFFIC:   '🚗 Traffic Alert',
+      BROKER:    '📋 Broker Issue',
+      SYSTEM:    '📢 System Alert',
+    };
 
-    for (const load of activeLoads || []) {
-      try {
-        await checkLoad(load, results);
-      } catch (err) {
-        results.errors.push(`Load ${load.load_id}: ${err.message}`);
+    const payload = {
+      message: {
+        token: fcmToken,
+        notification: {
+          title: TITLES[type] || '⚠️ Pure Dispatch Alert',
+          body: message,
+        },
+        data: Object.fromEntries(
+          Object.entries({ type, ...data }).map(([k, v]) => [k, String(v)])
+        ),
+        webpush: {
+          notification: { icon: '/pure-dispatch-logo.png' },
+        },
+      },
+    };
+
+    const res = await fetch(
+      `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
       }
+    );
+
+    const result = await res.json();
+    if (!res.ok) {
+      console.warn('[DisruptionCron] FCM send failed:', result);
+      return false;
     }
-
-    // ── 2. Auto-resolve stale alerts ──────────────────────
-    await supabase
-      .from('disruption_alerts')
-      .update({ resolved: true, resolved_at: new Date().toISOString() })
-      .eq('resolved', false)
-      .lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-    console.log('[DisruptionCron] Complete:', results);
-    return res.status(200).json({ success: true, ...results });
-
+    return true;
   } catch (err) {
-    console.error('[DisruptionCron] Fatal error:', err);
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('[DisruptionCron] Push notification error:', err);
+    return false;
   }
 }
 
@@ -90,17 +124,14 @@ async function checkLoad(load, results) {
 
   const alerts = [];
 
-  // ── Late Risk Detection ──────────────────────────────────
-  if (hoursUntilDeadline > 0 && hoursUntilDeadline < LATE_RISK_THRESHOLD_HOURS) {
-    const severity = hoursUntilDeadline < SEVERE_LATE_THRESHOLD_HOURS ? 'severe' : 'moderate';
+  if (hoursUntilDeadline > 0 && hoursUntilDeadline < 2) {
     alerts.push({
       alert_type: 'LATE_RISK',
-      severity,
+      severity: hoursUntilDeadline < 0.5 ? 'severe' : 'moderate',
       message: `Load #${load.load_id} is at risk of missing delivery deadline. ${hoursUntilDeadline.toFixed(1)} hours remaining.`,
     });
   }
 
-  // ── Overdue Detection ────────────────────────────────────
   if (hoursUntilDeadline < 0 && load.status !== 'delivered') {
     alerts.push({
       alert_type: 'LATE_RISK',
@@ -109,20 +140,17 @@ async function checkLoad(load, results) {
     });
   }
 
-  // ── Process each alert ───────────────────────────────────
   for (const alertData of alerts) {
-    // Check if we already have an unresolved alert of this type for this load
     const { data: existing } = await supabase
       .from('disruption_alerts')
       .select('id')
       .eq('load_id', load.id)
       .eq('alert_type', alertData.alert_type)
       .eq('resolved', false)
-      .single();
+      .maybeSingle();
 
-    if (existing) continue; // don't spam duplicate alerts
+    if (existing) continue;
 
-    // Create the alert
     const { data: newAlert, error: insertError } = await supabase
       .from('disruption_alerts')
       .insert({
@@ -139,67 +167,72 @@ async function checkLoad(load, results) {
       .single();
 
     if (insertError) {
-      console.error('[DisruptionCron] Alert insert error:', insertError);
+      console.error('[DisruptionCron] Insert error:', insertError);
       continue;
     }
 
     results.alertsCreated++;
 
-    // Send push notification to driver if they have an FCM token
     if (load.users?.fcm_token) {
       const sent = await sendPushNotification(
         load.users.fcm_token,
         alertData.alert_type,
         alertData.message,
-        { loadId: load.load_id, alertId: newAlert.id }
+        { loadId: load.load_id, alertId: String(newAlert.id) }
       );
       if (sent) results.notificationsSent++;
     }
   }
 }
 
-// ── Send push notification via Firebase Admin ────────────────
-async function sendPushNotification(fcmToken, type, message, data = {}) {
-  try {
-    const SEVERITY_TITLES = {
-      LATE_RISK: '⏰ Delivery Alert',
-      WEATHER: '🌩️ Weather Alert',
-      BREAKDOWN: '🔧 Breakdown Alert',
-      TRAFFIC: '🚗 Traffic Alert',
-      BROKER: '📋 Broker Issue',
-      SYSTEM: '📢 System Alert',
-    };
-
-    const payload = {
-      to: fcmToken,
-      notification: {
-        title: SEVERITY_TITLES[type] || '⚠️ Pure Dispatch Alert',
-        body: message,
-        icon: '/pure-dispatch-logo.png',
-      },
-      data: {
-        type,
-        ...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
-      },
-    };
-
-    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `key=${process.env.FCM_SERVER_KEY}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const result = await response.json();
-    if (result.failure > 0) {
-      console.warn('[DisruptionCron] FCM send failed:', result);
-      return false;
+// ── Main handler ─────────────────────────────────────────────
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    const authHeader = req.headers.authorization;
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-    return true;
+  }
+
+  console.log('[DisruptionCron] Starting at', new Date().toISOString());
+
+  const results = { checked: 0, alertsCreated: 0, notificationsSent: 0, errors: [] };
+
+  try {
+    const { data: activeLoads, error: loadError } = await supabase
+      .from('loads')
+      .select(`
+        id, load_id, status, delivery_deadline,
+        origin, destination, broker_name,
+        driver_id, rate, miles,
+        users(id, email, fcm_token)
+      `)
+      .in('status', ['accepted', 'in_transit', 'picked_up'])
+      .not('delivery_deadline', 'is', null);
+
+    if (loadError) throw loadError;
+
+    results.checked = activeLoads?.length || 0;
+
+    for (const load of activeLoads || []) {
+      try {
+        await checkLoad(load, results);
+      } catch (err) {
+        results.errors.push(`Load ${load.load_id}: ${err.message}`);
+      }
+    }
+
+    await supabase
+      .from('disruption_alerts')
+      .update({ resolved: true, resolved_at: new Date().toISOString() })
+      .eq('resolved', false)
+      .lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+    console.log('[DisruptionCron] Done:', results);
+    return res.status(200).json({ success: true, ...results });
+
   } catch (err) {
-    console.error('[DisruptionCron] Push notification error:', err);
-    return false;
+    console.error('[DisruptionCron] Fatal:', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 }
