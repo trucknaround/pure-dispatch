@@ -6127,6 +6127,12 @@ if (currentView === 'crm') {
               <Users className="w-4 h-4" />
               CRM
             </button>
+        <button
+  onClick={() => setCurrentView('disruptions')}
+  className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2"
+>
+  ⚡ Disruptions
+</button>
             <button
               onClick={() => setCurrentView('settings')}
               className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
