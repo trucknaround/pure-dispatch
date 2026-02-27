@@ -3406,7 +3406,34 @@ const [isVerifier, setIsVerifier] = useState(false);
       const response = await fetch(`${BACKEND_URL}/api/pure/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputText, carrier })
+        body: JSON.stringify({
+  message: inputText,
+  carrier,
+  context: {
+    driver: personalData,
+    carrier: carrier,
+    currentLoad: currentLoad,
+    currentView: currentView,
+    location: location,
+    documents: Object.entries(documents)
+      .filter(([key, val]) => val !== null && key !== 'pods' && key !== 'mechanicalIssues')
+      .map(([key, val]) => ({ type: key, name: val?.name || key })),
+    loads: loads.slice(0, 10),
+    earnings: {
+      thisWeek: loadHistory.filter(l => {
+        const d = new Date(l.claimedAt);
+        const now = new Date();
+        return (now - d) < 7 * 24 * 60 * 60 * 1000;
+      }).reduce((sum, l) => sum + (l.rate || 0), 0),
+      thisMonth: loadHistory.filter(l => {
+        const d = new Date(l.claimedAt);
+        const now = new Date();
+        return d.getMonth() === now.getMonth();
+      }).reduce((sum, l) => sum + (l.rate || 0), 0),
+      totalLoads: loadHistory.length
+    }
+  }
+})
       });
       const data = await response.json();
       
