@@ -5362,8 +5362,11 @@ if (currentView === 'crm') {
         </div>
       </div>
     );
-  }if (currentView === 'disruptions') return <DisruptionMonitor onBack={() => setCurrentView('home')} />;
+  }
 
+  if (currentView === 'disruptions') return <DisruptionMonitor onBack={() => setCurrentView('home')} />;
+
+  if (currentView === 'admin') return <AdminDashboard />;
   // =====================================================
   // HISTORY VIEW
   // =====================================================
