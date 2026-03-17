@@ -2373,6 +2373,21 @@ const checkSubscription = async () => {
       setIsLoggedIn(false);
       return;
     }
+    // Check if token is expired and clear it
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp && payload.exp < Date.now() / 1000) {
+        localStorage.removeItem('authToken');
+        setCurrentView('login');
+        setIsLoggedIn(false);
+        return;
+      }
+    } catch (e) {
+      localStorage.removeItem('authToken');
+      setCurrentView('login');
+      setIsLoggedIn(false);
+      return;
+    }
 
     const response = await fetch('https://pure-dispatch-landing.vercel.app/api/me', {
       headers: {
@@ -3410,8 +3425,8 @@ const [isVerifier, setIsVerifier] = useState(false);
   message: inputText,
   carrier,
   context: {
-    driver: personalData,
-    carrier: carrier,
+    driver: personalData || JSON.parse(localStorage.getItem('pureCarrier') || '{}'),
+    carrier: carrier || JSON.parse(localStorage.getItem('pureCarrier') || '{}'),
     currentLoad: currentLoad,
     currentView: currentView,
     location: location,
