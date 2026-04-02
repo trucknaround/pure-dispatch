@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '365d' }
     );
 
     console.log('✅ Login successful');
