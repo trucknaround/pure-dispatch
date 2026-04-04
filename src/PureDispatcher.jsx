@@ -7,6 +7,7 @@ import VerificationDashboard from './VerificationDashboard';
 import { usePushNotifications } from './usePushNotifications';
 import DisruptionMonitor from './DisruptionMonitor';
 import AdminDashboard from './admindashboard';
+import LoadboardConnect from './LoadboardConnect';
 // Backend URL
 const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:8080'
@@ -5768,6 +5769,8 @@ if (currentView === 'crm') {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6 max-w-4xl mx-auto w-full space-y-6">
+
+          <LoadboardConnect />
           
           {/* Appearance */}
           <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'} rounded-xl border`}>
