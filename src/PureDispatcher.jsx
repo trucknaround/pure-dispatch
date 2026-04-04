@@ -3827,14 +3827,62 @@ const [isVerifier, setIsVerifier] = useState(false);
     }
   };
 
-  const handleRefreshLoads = () => {
-    setIsLoadingLoads(true);
-    setTimeout(() => {
-      const newLoads = generateMockLoads();
-      setLoads(newLoads);
-      setIsLoadingLoads(false);
-    }, 1000);
-  };
+  const handleRefreshLoads = async () => {
+  setIsLoadingLoads(true);
+  const token = localStorage.getItem('authToken');
+  
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/loadboard/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        origin: carrier?.city || '',
+        destination: '',
+        equipmentType: carrier?.equipment_types?.[0] || 'Dry Van',
+        radius: 150,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.code === 'NOT_CONNECTED') {
+      setMessages(prev => [...prev, {
+        from: 'pure',
+        text: "Driver, you need to connect your 123Loadboard account first. Head to Settings and link your account — then I can pull real loads for you.",
+        timestamp: new Date(),
+        mood: 'neutral',
+      }]);
+      setCurrentView('settings');
+      return;
+    }
+
+    if (data.code === 'TOKEN_EXPIRED') {
+      setMessages(prev => [...prev, {
+        from: 'pure',
+        text: "Your 123Loadboard session expired. Head to Settings and reconnect your account.",
+        timestamp: new Date(),
+        mood: 'neutral',
+      }]);
+      setCurrentView('settings');
+      return;
+    }
+
+    if (data.success && data.loads) {
+      setLoads(data.loads);
+    } else {
+      // Fallback to mock loads if API fails
+      setLoads(generateMockLoads());
+    }
+  } catch (err) {
+    console.error('Load search error:', err);
+    setLoads(generateMockLoads());
+  } finally {
+    setIsLoadingLoads(false);
+  }
+};
 
   const handleClaimLoad = (load) => {
     const claimedLoad = { ...load, status: 'claimed', claimedAt: new Date() };
