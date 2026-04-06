@@ -2446,6 +2446,9 @@ const checkSubscription = async () => {
   
   // Load board state
   const [loads, setLoads] = useState([]);
+  const [loadSearchOrigin, setLoadSearchOrigin] = useState('');
+const [loadSearchDestination, setLoadSearchDestination] = useState('');
+const [loadSearchEquipment, setLoadSearchEquipment] = useState('');
   const [loadHistory, setLoadHistory] = useState([]);
   const [favoriteLoads, setFavoriteLoads] = useState([]);
   const [isLoadingLoads, setIsLoadingLoads] = useState(false);
