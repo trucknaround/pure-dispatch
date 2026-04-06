@@ -5392,6 +5392,45 @@ if (currentView === 'crm') {
                 Refresh
               </button>
             </div>
+            {/* Search Filters */}
+            <div className="flex gap-3 mb-4 flex-wrap">
+              <input
+                type="text"
+                placeholder="Origin city (e.g. Atlanta, GA)"
+                value={loadSearchOrigin || ''}
+                onChange={(e) => setLoadSearchOrigin(e.target.value)}
+                className="flex-1 min-w-[180px] bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Destination (optional)"
+                value={loadSearchDestination || ''}
+                onChange={(e) => setLoadSearchDestination(e.target.value)}
+                className="flex-1 min-w-[180px] bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+              />
+              <select
+                value={loadSearchEquipment || ''}
+                onChange={(e) => setLoadSearchEquipment(e.target.value)}
+                className="bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+              >
+                <option value="">All Equipment</option>
+                <option value="Dry Van">Dry Van</option>
+                <option value="Reefer">Reefer</option>
+                <option value="Flatbed">Flatbed</option>
+                <option value="Step Deck">Step Deck</option>
+                <option value="Power Only">Power Only</option>
+              </select>
+              <button
+                onClick={handleRefreshLoads}
+                disabled={isLoadingLoads}
+                className="px-4 py-2 rounded-lg bg-green-500 text-black hover:bg-green-400 disabled:bg-gray-700 transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <Search className="w-4 h-4" />
+                Search
+              </button>
+            </div>
+            <div className="flex gap-2">
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setCurrentView('home')}
