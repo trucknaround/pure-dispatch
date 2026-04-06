@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     .eq('is_active', true)
     .single();
 
-  if (!connection) {
+  if (!connection && process.env.LOADBOARD_DEV_MODE !== 'true') {
     return res.status(403).json({
       error: 'No 123Loadboard account connected.',
       code: 'NOT_CONNECTED',
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
   }
 
   // Check token expiry
-  if (connection.token_expires_at && new Date(connection.token_expires_at) < new Date()) {
+ if (connection && connection.token_expires_at && new Date(connection.token_expires_at) < new Date()) {
     return res.status(403).json({
       error: '123Loadboard session expired.',
       code: 'TOKEN_EXPIRED',
