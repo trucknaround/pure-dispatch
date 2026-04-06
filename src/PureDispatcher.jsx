@@ -3841,10 +3841,10 @@ const [isVerifier, setIsVerifier] = useState(false);
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        origin: carrier?.city || '',
-        destination: '',
-        equipmentType: carrier?.equipment_types?.[0] || 'Dry Van',
+     body: JSON.stringify({
+  origin: loadSearchOrigin || carrier?.city || '',
+  destination: loadSearchDestination || '',
+  equipmentType: loadSearchEquipment || carrier?.equipment_types?.[0] || 'Dry Van',
         radius: 150,
       }),
     });
