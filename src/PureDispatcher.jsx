@@ -2283,7 +2283,12 @@ operatingRegions: Array.isArray(carrier?.operating_regions) ? carrier.operating_
 // =====================================================
 function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, compact }) {
   return (
-    <div className={`bg-gray-900 rounded-xl border border-gray-800 ${compact ? 'p-4' : 'p-5'}`}>
+    <div className={`bg-gray-900 rounded-xl border ${load.is_restricted ? 'border-blue-900/50' : 'border-gray-800'} ${compact ? 'p-4' : 'p-5'}`}>
+      {load.devMode && (
+        <div className="mb-2">
+          <span className="px-2 py-1 rounded-full text-xs bg-yellow-900/30 text-yellow-400">DEV MODE</span>
+        </div>
+      )}
       {showStatus && load.status && (
         <div className="mb-3">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -2309,31 +2314,67 @@ function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, c
       <div className={`grid grid-cols-3 gap-4 ${compact ? 'mb-3' : 'mb-4'} pb-4 border-b border-gray-800`}>
         <div>
           <p className="text-xs text-gray-500 mb-1">Distance</p>
-          <p className="font-medium text-white">{load.distance} mi</p>
+          <p className="font-medium text-white">{load.miles || load.distance} mi</p>
         </div>
         <div>
           <p className="text-xs text-gray-500 mb-1">Weight</p>
-          <p className="font-medium text-white">{load.weight.toLocaleString()} lbs</p>
+          <p className="font-medium text-white">{load.weight ? load.weight.toLocaleString() + ' lbs' : 'N/A'}</p>
         </div>
         <div>
           <p className="text-xs text-gray-500 mb-1">Rate</p>
-          <p className="font-medium text-green-400">${load.rate.toLocaleString()}</p>
+          <p className="font-medium text-green-400">${load.rate?.toLocaleString()}</p>
         </div>
       </div>
       <div className={`grid grid-cols-2 gap-4 ${compact ? 'mb-3' : 'mb-4'}`}>
         <div>
           <p className="text-xs text-gray-500 mb-1">Equipment</p>
-          <p className="text-sm text-white">{load.equipment}</p>
+          <p className="text-sm text-white">{load.equipmentType || load.equipment}</p>
         </div>
         <div>
           <p className="text-xs text-gray-500 mb-1">Pickup</p>
-          <p className="text-sm text-white">{new Date(load.pickupDate).toLocaleDateString()}</p>
+          <p className="text-sm text-white">{load.pickupDate || 'TBD'}</p>
         </div>
       </div>
+      {load.brokerName && (
+        <div className="mb-4 pb-4 border-b border-gray-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Broker</p>
+              <p className="text-sm text-white">{load.brokerName}</p>
+              {load.brokerMC && <p className="text-xs text-gray-500">{load.brokerMC}</p>}
+            </div>
+            {load.creditScore && (
+              <div className="text-right">
+                <p className="text-xs text-gray-500 mb-1">Credit Score</p>
+                <p className={`text-sm font-bold ${load.creditScore >= 90 ? 'text-green-400' : load.creditScore >= 75 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  {load.creditScore}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {load.ratePerMile && (
+        <div className="mb-4">
+          <p className="text-xs text-gray-500 mb-1">Rate Per Mile</p>
+          <p className="text-sm text-green-400 font-medium">${load.ratePerMile}/mi</p>
+        </div>
+      )}
       <div className="flex gap-2">
-        <button onClick={() => onClaim(load)} className="flex-1 bg-green-500 text-black py-2 rounded-lg hover:bg-green-400 transition-colors text-sm font-medium">
-          Book Load
-        </button>
+        {load.requiresRedirectForBooking ? (
+          
+            href={load.original_url || 'https://www.123loadboard.com'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 transition-colors text-sm font-medium text-center"
+          >
+            Book on 123Loadboard ↗
+          </a>
+        ) : (
+          <button onClick={() => onClaim(load)} className="flex-1 bg-green-500 text-black py-2 rounded-lg hover:bg-green-400 transition-colors text-sm font-medium">
+            Book Load
+          </button>
+        )}
         <button onClick={() => onNav(load.origin)} className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors">
           <Navigation className="w-4 h-4 text-green-400" />
         </button>
@@ -2344,7 +2385,6 @@ function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, c
     </div>
   );
 }
-
 // =====================================================
 // MAIN PURE DISPATCHER COMPONENT
 // =====================================================
