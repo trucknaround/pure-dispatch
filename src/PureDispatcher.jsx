@@ -2366,7 +2366,7 @@ function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, c
             onClick={() => window.open(load.original_url || 'https://www.123loadboard.com', '_blank')}
             className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 transition-colors text-sm font-medium"
           >
-            Book on 123Loadboard ↗
+            Book on 123Loadboard →
           </button>
         ) : (
           <button onClick={() => onClaim(load)} className="flex-1 bg-green-500 text-black py-2 rounded-lg hover:bg-green-400 transition-colors text-sm font-medium">
