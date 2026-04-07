@@ -127,7 +127,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const tabs = ["overview", "users", "incidents", "alerts", "broadcast"];
+  const tabs = ["overview", "users", "incidents", "alerts", "broadcast", "compliance"];
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "monospace", color: C.text }}>
