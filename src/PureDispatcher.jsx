@@ -2291,10 +2291,8 @@ function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, c
       )}
       {showStatus && load.status && (
         <div className="mb-3">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            load.status === 'claimed' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-400'
-          }`}>
-            {load.status === 'claimed' ? '✓ Claimed' : 'Viewed'}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${load.status === 'claimed' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-400'}`}>
+            {load.status === 'claimed' ? 'Claimed' : 'Viewed'}
           </span>
         </div>
       )}
@@ -2361,26 +2359,18 @@ function LoadCard({ load, onClaim, onNav, onFavorite, isFavorited, showStatus, c
         </div>
       )}
       <div className="flex gap-2">
-       {load.requiresRedirectForBooking ? (
+        {load.requiresRedirectForBooking ? (
           <button
             onClick={() => window.open(load.original_url || 'https://www.123loadboard.com', '_blank')}
             className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 transition-colors text-sm font-medium"
           >
-            Book on 123Loadboard →
+            Book on 123Loadboard
           </button>
         ) : (
-          <button onClick={() => onClaim(load)} className="flex-1 bg-green-500 text-black py-2 rounded-lg hover:bg-green-400 transition-colors text-sm font-medium">
-            Book Load
-          </button>
-        )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 transition-colors text-sm font-medium text-center"
+          <button
+            onClick={() => onClaim(load)}
+            className="flex-1 bg-green-500 text-black py-2 rounded-lg hover:bg-green-400 transition-colors text-sm font-medium"
           >
-            Book on 123Loadboard ↗
-          </a>
-        ) : (
-          <button onClick={() => onClaim(load)} className="flex-1 bg-green-500 text-black py-2 rounded-lg hover:bg-green-400 transition-colors text-sm font-medium">
             Book Load
           </button>
         )}
