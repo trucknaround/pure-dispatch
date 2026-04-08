@@ -9,14 +9,15 @@
       "schedule": "*/15 * * * *"
     }
   ],
-  "rewrites": [
+ "rewrites": [
     { "source": "/admin", "destination": "/index.html" },
     { "source": "/admin/(.*)", "destination": "/index.html" },
+    { "source": "/api/admin/:path*", "destination": "/api/admin/:path*" },
     {
       "source": "/api/:path*",
       "destination": "https://pure-dispatch-backend.vercel.app/api/:path*"
     }
-  ],
+  ]
   "headers": [
     {
       "source": "/api/(.*)",
