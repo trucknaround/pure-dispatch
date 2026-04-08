@@ -97,11 +97,11 @@ function AdminLogin({ onLogin }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 24,
-            margin: '0 auto 16px',
-          }}>
-            ⚡
-          </div>
+            <img 
+  src="https://i.postimg.cc/g0VG0rdv/1765292235-removebg-preview.png"
+  alt="Pure Dispatch"
+  style={{ width: 36, height: 36, objectFit: 'contain' }}
+/>
           <div style={{ color: C.green, fontWeight: 'bold', fontSize: 20, marginBottom: 4 }}>
             PURE DISPATCH
           </div>
