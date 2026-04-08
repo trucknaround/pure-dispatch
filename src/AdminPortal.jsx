@@ -106,7 +106,6 @@ function AdminLogin({ onLogin }) {
     style={{ width: 40, height: 40, objectFit: 'contain' }}
   />
 </div>
-/>
           <div style={{ color: C.green, fontWeight: 'bold', fontSize: 20, marginBottom: 4 }}>
             PURE DISPATCH
           </div>
