@@ -11,11 +11,7 @@
   ],
   "rewrites": [
     { "source": "/admin", "destination": "/index.html" },
-    { "source": "/admin/(.*)", "destination": "/index.html" },
-    {
-      "source": "/api/:path*",
-      "destination": "https://pure-dispatch-backend.vercel.app/api/:path*"
-    }
+    { "source": "/admin/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
