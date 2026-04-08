@@ -90,17 +90,22 @@ function AdminLogin({ onLogin }) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
-            width: 56,
-            height: 56,
-            background: C.green,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            <img 
-  src="https://i.postimg.cc/g0VG0rdv/1765292235-removebg-preview.png"
-  alt="Pure Dispatch"
-  style={{ width: 36, height: 36, objectFit: 'contain' }}
+  width: 56,
+  height: 56,
+  background: C.green,
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  margin: '0 auto 16px',
+  overflow: 'hidden',
+}}>
+  <img
+    src="https://i.postimg.cc/g0VG0rdv/1765292235-removebg-preview.png"
+    alt="Pure Dispatch"
+    style={{ width: 40, height: 40, objectFit: 'contain' }}
+  />
+</div>
 />
           <div style={{ color: C.green, fontWeight: 'bold', fontSize: 20, marginBottom: 4 }}>
             PURE DISPATCH
